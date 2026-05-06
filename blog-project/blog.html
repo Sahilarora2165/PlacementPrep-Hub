@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog | Campus Compass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar container">
+      <a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a>
+      <button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
+      <div class="nav-links" id="navLinks"></div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container page-hero-inner">
+        <p class="eyebrow">Campus Library</p>
+        <h1>Browse practical student guides.</h1>
+        <p class="lead">Search campus guides, filter by category, and sort by popularity, length, or recency.</p>
+      </div>
+    </section>
+
+    <section class="section page-section">
+      <div class="container">
+        <div class="toolbar-panel">
+          <div class="search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input class="search-input" id="blogSearch" type="search" placeholder="Search by title, author, category, or content">
+          </div>
+          <div class="field compact-field">
+            <label for="blogSort">Sort by</label>
+            <select id="blogSort">
+              <option value="latest">Latest</option>
+              <option value="likes">Most liked</option>
+              <option value="shortest">Shortest read</option>
+              <option value="longest">Longest read</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="tabs category-strip" id="categoryTabs"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <p class="eyebrow" id="resultsInfo" style="margin:0;min-width:120px">All posts</p>
+          <span id="resultsCount" style="color:var(--muted);font-size:0.9rem"></span>
+        </div>
+
+        <div class="grid grid-3 blog-listing" id="blogListing"></div>
+        <div class="pagination-bar" id="paginationBar"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Share Modal -->
+  <div class="share-modal" id="shareModal">
+    <div class="share-modal-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="margin:0">Share this post</h3>
+        <button class="btn btn-secondary" id="closeShareModal" style="min-height:38px;padding:6px 12px"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="share-buttons">
+        <button class="btn btn-primary" id="shareTwitter"><i class="fa-brands fa-twitter"></i> Twitter</button>
+        <button class="btn btn-secondary" id="copyShareLink"><i class="fa-regular fa-copy"></i> Copy</button>
+      </div>
+      <div class="share-link-field">
+        <input type="text" id="shareUrl" readonly>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <strong>Campus Compass</strong>
+      <div class="footer-links"><a href="index.html">Home</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

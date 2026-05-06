@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Campus Compass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body>
+  <header class="site-header"><nav class="navbar container"><a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a><button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button><div class="nav-links" id="navLinks"></div></nav></header>
+  <main class="auth-shell cinematic-auth">
+    <section class="auth-panel">
+    <aside class="auth-copy">
+      <p class="eyebrow">Campus Compass</p>
+      <h1>Return to your reading desk.</h1>
+      <p class="lead">Save guides, write updates, continue drafts, and keep useful student knowledge organized.</p>
+    </aside>
+    <form class="form-card narrow" id="loginForm" novalidate>
+      <p class="eyebrow">Welcome back</p>
+      <h1>Login</h1>
+      <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email"></div>
+      <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"></div>
+      <p class="error" id="loginError"></p>
+      <button class="btn btn-primary" type="submit">Login</button>
+      <p style="margin-top:18px;">New here? <a class="category-pill" href="signup.html">Create an account</a></p>
+    </form>
+    </section>
+  </main>
+  <script src="js/main.js"></script>
+</body>
+</html>

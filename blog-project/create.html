@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Write | Campus Compass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body>
+  <header class="site-header"><nav class="navbar container"><a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a><button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button><div class="nav-links" id="navLinks"></div></nav></header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container page-hero-inner">
+        <p class="eyebrow">Writer Studio</p>
+        <h1>Draft, preview, and publish a campus guide.</h1>
+        <p class="lead">Autosaved writing, live preview, word count, read time, and optional media in a focused editor.</p>
+      </div>
+    </section>
+  <section class="section page-section">
+    <div class="container">
+      <div class="split editor-layout">
+        <form class="form-card" id="createForm" novalidate>
+          <div class="field"><label for="title">Title</label><input id="title" type="text"></div>
+          <div class="field">
+            <label for="category">Category</label>
+            <select id="category">
+              <option value="">Choose category</option>
+              <option>Placements</option>
+              <option>Projects</option>
+              <option>Exams</option>
+              <option>Campus Life</option>
+              <option>Events</option>
+              <option>Tech Tutorials</option>
+              <option>Travel</option>
+              <option>Opinion</option>
+            </select>
+          </div>
+          <div class="field"><label for="coverImage">Cover Image URL</label><input id="coverImage" type="url" placeholder="https://images.unsplash.com/..."></div>
+          <div class="field"><label for="videoUrl">Optional Video URL</label><input id="videoUrl" type="url" placeholder="https://example.com/resource.mp4"></div>
+          <div class="field"><label for="youtubeUrl">Optional YouTube Embed URL</label><input id="youtubeUrl" type="url" placeholder="https://www.youtube.com/embed/..."></div>
+          <div class="field"><label>Content (Rich Editor)</label><div id="editor" style="min-height:280px;background:rgba(255,253,248,0.86);border:1px solid rgba(227,223,214,0.84);border-radius:8px;"></div><textarea id="content" style="display:none;"></textarea></div>
+          <p class="meta" id="postMetrics">0 words • 1 min read</p>
+          <p class="meta" id="draftStatus">Draft is empty</p>
+          <p class="error" id="createError"></p>
+          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Publish</button>
+        </form>
+
+        <aside class="preview-panel">
+          <p class="eyebrow">Live Preview</p>
+          <div id="livePreview"></div>
+        </aside>
+      </div>
+    </div>
+    </section>
+  </main>
+
+  <div class="toast" id="createToast"></div>
+  <footer class="site-footer"><div class="container footer-grid"><strong>Campus Compass</strong><div class="footer-links"><a href="blog.html">Blog</a><a href="dashboard.html">Dashboard</a><a href="contact.html">Contact</a></div></div></footer>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link', 'image'],
+            ['clean']
+          ]
+        },
+        placeholder: 'Write your campus guide...'
+      });
+
+      var contentArea = document.getElementById('content');
+      var previewPanel = document.getElementById('livePreview');
+
+      // Load saved draft content into Quill editor
+      var savedContent = contentArea.value;
+      if (savedContent) {
+        quill.root.innerHTML = savedContent;
+      }
+
+      function updateLivePreview() {
+        if (!previewPanel) return;
+        var html = quill.root.innerHTML;
+        var textOnly = quill.getText().trim();
+        if (textOnly.length === 0) {
+          previewPanel.innerHTML = '<div class="empty-state" style="min-height:180px"><i class="fa-regular fa-file-lines"></i><h3>Live Preview</h3><p>Start typing in the editor to see a live preview of your post content.</p></div>';
+          return;
+        }
+        previewPanel.innerHTML = '<div class="article-content" style="font-size:1rem">' + html + '</div>';
+      }
+
+      quill.on('text-change', function() {
+        contentArea.value = quill.root.innerHTML;
+        var textOnlyContent = quill.getText();
+        var words = textOnlyContent.split(/\s+/).filter(Boolean).length;
+        var metrics = document.getElementById('postMetrics');
+        if (metrics) metrics.textContent = words + ' words • ' + Math.max(1, Math.ceil(words / 200)) + ' min read';
+        updateLivePreview();
+      });
+
+      var form = document.getElementById('createForm');
+      form.addEventListener('submit', function(e) {
+        contentArea.value = quill.root.innerHTML;
+      });
+
+      // Initial preview render
+      updateLivePreview();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Compass | Student Knowledge Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar container">
+      <a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a>
+      <button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
+      <div class="nav-links" id="navLinks"></div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="hero-kicker">Student knowledge, saved in one place</span>
+          <h1>Share <span id="typingText" class="typing-cursor"></span></h1>
+          <p class="lead">Campus Compass helps students publish practical guides for placements, projects, exams, campus life, events, and technical learning.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="blog.html"><i class="fa-solid fa-book-open"></i> Start Reading</a>
+            <a class="btn btn-secondary" href="create.html"><i class="fa-solid fa-pen-nib"></i> Write a Guide</a>
+          </div>
+          <div class="hero-feature-rail">
+            <span><i class="fa-solid fa-bookmark"></i> Save guides</span>
+            <span><i class="fa-solid fa-comments"></i> Discuss updates</span>
+            <span><i class="fa-solid fa-chart-line"></i> Track trending</span>
+          </div>
+        </div>
+        <aside class="editorial-note">
+          "Useful student knowledge should not disappear inside chats. Save a guide, comment with updates, and keep the next batch from starting over."
+        </aside>
+      </div>
+    </section>
+
+    <!-- Featured Posts -->
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Featured Posts</p>
+            <h2>Most useful right now</h2>
+          </div>
+          <a class="btn btn-secondary" href="blog.html">View All</a>
+        </div>
+        <div class="featured-carousel grid" id="featuredPosts"></div>
+      </div>
+    </section>
+
+    <!-- Trending -->
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Trending</p>
+            <h2>Ranked by likes and comments</h2>
+          </div>
+        </div>
+        <div id="trendingPosts" class="grid grid-3"></div>
+      </div>
+    </section>
+
+    <!-- Latest Posts -->
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Latest Posts</p>
+            <h2>Student submissions</h2>
+          </div>
+        </div>
+        <div id="latestPosts" class="grid grid-3"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Share Modal -->
+  <div class="share-modal" id="shareModal">
+    <div class="share-modal-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="margin:0">Share this post</h3>
+        <button class="btn btn-secondary" id="closeShareModal" style="min-height:38px;padding:6px 12px"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="share-buttons">
+        <button class="btn btn-primary" id="shareTwitter"><i class="fa-brands fa-twitter"></i> Twitter</button>
+        <button class="btn btn-secondary" id="copyShareLink"><i class="fa-regular fa-copy"></i> Copy</button>
+      </div>
+      <div class="share-link-field">
+        <input type="text" id="shareUrl" readonly>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <strong>Campus Compass</strong>
+      <div class="footer-links"><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
