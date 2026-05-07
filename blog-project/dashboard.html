@@ -3,110 +3,96 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | Campus Compass</title>
+  <title>Dashboard | PlacementPrep Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="dashboard-page">
-  <header class="site-header">
-    <nav class="navbar container">
-      <a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a>
-      <button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
-      <div class="nav-links" id="navLinks"></div>
-    </nav>
-  </header>
+<body>
 
-  <main class="dashboard-shell">
-    <section class="dashboard-masthead container" id="dashboardPanel">
+<header class="site-header">
+  <nav class="navbar container">
+    <a class="logo" href="index.html"><span class="logo-mark">PP</span> PlacementPrep</a>
+    <button class="hamburger" id="hamburger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+</header>
+
+<main class="dashboard-page">
+  <div class="dashboard-shell container" id="dashboardPanel">
+    <div class="dashboard-masthead">
       <div class="writer-identity">
-        <div class="avatar-orb" id="dashboardAvatar">C</div>
+        <div class="avatar-orb" id="dashboardAvatar">A</div>
         <div>
-          <p class="eyebrow">Writer Console</p>
-          <h1><span id="dashboardName"></span></h1>
-          <p class="lead">Manage your campus guides, saved reading, inbox, reports, and writing pipeline from one focused workspace.</p>
+          <span class="eyebrow" style="margin-bottom:6px;display:inline-block">Writer Console</span>
+          <h1 id="dashboardName" style="margin-bottom:4px"></h1>
+          <p style="color:var(--muted);font-size:0.85rem">Manage your guides, reading list, messages, and reports</p>
         </div>
       </div>
       <div class="dashboard-actions">
-        <a class="btn btn-primary" href="create.html"><i class="fa-solid fa-pen-nib"></i> New Guide</a>
-        <a class="btn btn-secondary" href="blog.html"><i class="fa-solid fa-book-open"></i> Explore</a>
-        <a class="btn btn-secondary" href="#" id="logoutLinkDashboard"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+        <a class="btn btn-primary btn-sm" href="create.html"><i class="fa-solid fa-pen-nib"></i> New Guide</a>
+        <a class="btn btn-secondary btn-sm" href="blog.html"><i class="fa-solid fa-book-open"></i> Browse</a>
       </div>
-    </section>
+    </div>
 
-    <section class="container dashboard-metrics">
-      <article class="metric-card">
-        <span>Published</span>
-        <strong id="postCount">0</strong>
-        <small>Your guides</small>
-      </article>
-      <article class="metric-card">
-        <span>Saved</span>
-        <strong id="savedCount">0</strong>
-        <small>Reading list</small>
-      </article>
-      <article class="metric-card">
-        <span>Inbox</span>
-        <strong id="inboxCount">0</strong>
-        <small>Messages</small>
-      </article>
-      <article class="metric-card">
-        <span>Reports</span>
-        <strong id="reportCount">0</strong>
-        <small>Review queue</small>
-      </article>
-    </section>
+    <div class="dashboard-metrics">
+      <div class="metric-card"><span>Published</span><strong id="postCount">0</strong><small>Your guides</small></div>
+      <div class="metric-card"><span>Saved</span><strong id="savedCount">0</strong><small>Reading list</small></div>
+      <div class="metric-card"><span>Inbox</span><strong id="inboxCount">0</strong><small>Messages</small></div>
+      <div class="metric-card"><span>Reports</span><strong id="reportCount">0</strong><small>Flagged posts</small></div>
+    </div>
 
-    <section class="container console-grid">
+    <div class="console-grid">
       <aside class="console-sidebar">
-        <button class="console-tab active" data-dashboard-tab="published"><i class="fa-solid fa-newspaper"></i><span>Published</span></button>
-        <button class="console-tab" data-dashboard-tab="drafts"><i class="fa-solid fa-file-lines"></i><span>Draft</span></button>
-        <button class="console-tab" data-dashboard-tab="saved"><i class="fa-solid fa-bookmark"></i><span>Saved</span></button>
-        <button class="console-tab" data-dashboard-tab="inbox"><i class="fa-solid fa-inbox"></i><span>Inbox</span></button>
-        <button class="console-tab" data-dashboard-tab="reports"><i class="fa-solid fa-flag"></i><span>Reports</span></button>
+        <button class="console-tab active" data-dashboard-tab="published"><i class="fa-solid fa-newspaper"></i> Published</button>
+        <button class="console-tab" data-dashboard-tab="draft"><i class="fa-solid fa-pen"></i> Draft</button>
+        <button class="console-tab" data-dashboard-tab="saved"><i class="fa-solid fa-bookmark"></i> Saved</button>
+        <button class="console-tab" data-dashboard-tab="inbox"><i class="fa-solid fa-inbox"></i> Inbox</button>
+        <button class="console-tab" data-dashboard-tab="reports"><i class="fa-solid fa-flag"></i> Reports</button>
       </aside>
 
       <div class="console-content">
-        <section class="console-panel active" data-dashboard-panel="published">
-          <div class="console-heading">
-            <div><p class="eyebrow">Publication</p><h2>Published guides</h2></div>
-            <a class="btn btn-secondary" href="create.html">Write another</a>
-          </div>
-          <div class="dashboard-list publication-list" id="dashboardList"></div>
-        </section>
-
-        <section class="console-panel" data-dashboard-panel="drafts">
-          <div class="console-heading"><div><p class="eyebrow">Pipeline</p><h2>Current draft</h2></div></div>
-          <div class="dashboard-list" id="draftList"></div>
-        </section>
-
-        <section class="console-panel" data-dashboard-panel="saved">
-          <div class="console-heading"><div><p class="eyebrow">Reading</p><h2>Saved for later</h2></div></div>
-          <div class="dashboard-list" id="savedList"></div>
-        </section>
-
-        <section class="console-panel" data-dashboard-panel="inbox">
-          <div class="console-heading"><div><p class="eyebrow">Messages</p><h2>Contact inbox</h2></div></div>
-          <div class="comments-list" id="inboxList"></div>
-        </section>
-
-        <section class="console-panel" data-dashboard-panel="reports">
-          <div class="console-heading"><div><p class="eyebrow">Moderation</p><h2>Flagged posts</h2></div></div>
-          <div class="comments-list" id="reportsList"></div>
-        </section>
+        <div class="console-panel active" data-dashboard-panel="published">
+          <div class="console-heading"><h2>Your Published Guides</h2><a class="btn btn-secondary btn-sm" href="create.html">Write another</a></div>
+          <div id="dashboardList"></div>
+        </div>
+        <div class="console-panel" data-dashboard-panel="draft">
+          <div class="console-heading"><h2>Current Draft</h2></div>
+          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Your in-progress guide autosaves in the browser</p>
+          <div id="draftList"></div>
+        </div>
+        <div class="console-panel" data-dashboard-panel="saved">
+          <div class="console-heading"><h2>Saved for Later</h2><a class="btn btn-secondary btn-sm" href="blog.html">Browse more</a></div>
+          <div id="savedList"></div>
+        </div>
+        <div class="console-panel" data-dashboard-panel="inbox">
+          <div class="console-heading"><h2>Contact Inbox</h2></div>
+          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Messages submitted through the contact form</p>
+          <div id="inboxList"></div>
+        </div>
+        <div class="console-panel" data-dashboard-panel="reports">
+          <div class="console-heading"><h2>Flagged Reports</h2></div>
+          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Posts reported by users for review</p>
+          <div id="reportsList"></div>
+        </div>
       </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-grid">
-      <strong>Campus Compass</strong>
-      <div class="footer-links"><a href="index.html">Home</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a></div>
     </div>
-  </footer>
+  </div>
+</main>
 
-  <script src="js/main.js"></script>
+<div class="toast" id="globalToast"></div>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="logo"><span class="logo-mark">PP</span> PlacementPrep Hub</div>
+    <div class="footer-links"><a href="index.html">Home</a><a href="blog.html">Guides</a><a href="contact.html">Contact</a></div>
+    <div class="footer-copy">Built for CS students</div>
+  </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

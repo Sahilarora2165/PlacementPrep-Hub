@@ -3,86 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog | Campus Compass</title>
+  <title>Guides | PlacementPrep Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="site-header">
-    <nav class="navbar container">
-      <a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a>
-      <button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
-      <div class="nav-links" id="navLinks"></div>
-    </nav>
-  </header>
 
-  <main>
-    <section class="page-hero">
-      <div class="container page-hero-inner">
-        <p class="eyebrow">Campus Library</p>
-        <h1>Browse practical student guides.</h1>
-        <p class="lead">Search campus guides, filter by category, and sort by popularity, length, or recency.</p>
-      </div>
-    </section>
+<header class="site-header">
+  <nav class="navbar container">
+    <a class="logo" href="index.html"><span class="logo-mark">PP</span> PlacementPrep</a>
+    <button class="hamburger" id="hamburger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+</header>
 
-    <section class="section page-section">
-      <div class="container">
-        <div class="toolbar-panel">
-          <div class="search-wrap">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input class="search-input" id="blogSearch" type="search" placeholder="Search by title, author, category, or content">
-          </div>
-          <div class="field compact-field">
-            <label for="blogSort">Sort by</label>
-            <select id="blogSort">
-              <option value="latest">Latest</option>
-              <option value="likes">Most liked</option>
-              <option value="shortest">Shortest read</option>
-              <option value="longest">Longest read</option>
-            </select>
-          </div>
+<main>
+  <section class="page-hero">
+    <div class="container page-hero-inner">
+      <span class="eyebrow">Library</span>
+      <h1 style="margin-top:12px">Placement guides by students</h1>
+      <p class="lead">DSA roadmaps, resume tips, system design basics, interview notes, and more — written by students who've been through it.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px">
+    <div class="container">
+      <!-- Toolbar -->
+      <div class="toolbar-panel">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input class="search-input" id="blogSearch" type="search" placeholder="Search by topic, author, or keyword…">
         </div>
-
-        <div class="tabs category-strip" id="categoryTabs"></div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-          <p class="eyebrow" id="resultsInfo" style="margin:0;min-width:120px">All posts</p>
-          <span id="resultsCount" style="color:var(--muted);font-size:0.9rem"></span>
+        <div class="field compact-field">
+          <label>&nbsp;</label>
+          <select id="blogSort">
+            <option value="latest">Latest first</option>
+            <option value="likes">Most liked</option>
+            <option value="shortest">Quick reads</option>
+            <option value="longest">Deep dives</option>
+          </select>
         </div>
+      </div>
 
-        <div class="grid grid-3 blog-listing" id="blogListing"></div>
-        <div class="pagination-bar" id="paginationBar"></div>
-      </div>
-    </section>
-  </main>
+      <!-- Category tabs -->
+      <div class="tabs" id="categoryTabs"></div>
 
-  <!-- Share Modal -->
-  <div class="share-modal" id="shareModal">
-    <div class="share-modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h3 style="margin:0">Share this post</h3>
-        <button class="btn btn-secondary" id="closeShareModal" style="min-height:38px;padding:6px 12px"><i class="fa-solid fa-xmark"></i></button>
+      <!-- Results info -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px">
+        <span id="resultsInfo" style="font-size:0.85rem;color:var(--muted);font-family:var(--mono)"></span>
+        <a href="create.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen-nib"></i> Write a guide</a>
       </div>
-      <div class="share-buttons">
-        <button class="btn btn-primary" id="shareTwitter"><i class="fa-brands fa-twitter"></i> Twitter</button>
-        <button class="btn btn-secondary" id="copyShareLink"><i class="fa-regular fa-copy"></i> Copy</button>
-      </div>
-      <div class="share-link-field">
-        <input type="text" id="shareUrl" readonly>
-      </div>
+
+      <!-- Grid -->
+      <div class="grid grid-3" id="blogListing"></div>
+
+      <!-- Pagination -->
+      <div class="pagination-bar" id="paginationBar"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Share Modal -->
+<div class="share-modal" id="shareModal">
+  <div class="share-modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3>Share this guide</h3>
+      <button class="btn btn-ghost btn-sm" id="closeShareModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="share-buttons">
+      <button class="btn btn-primary" id="shareTwitter"><i class="fa-brands fa-twitter"></i> Twitter</button>
+      <button class="btn btn-secondary" id="copyShareLink"><i class="fa-regular fa-copy"></i> Copy</button>
+    </div>
+    <div class="share-link-field">
+      <input type="text" id="shareUrl" readonly value="">
     </div>
   </div>
+</div>
 
-  <footer class="site-footer">
-    <div class="container footer-grid">
-      <strong>Campus Compass</strong>
-      <div class="footer-links"><a href="index.html">Home</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>
+<div class="toast" id="globalToast"></div>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="logo"><span class="logo-mark">PP</span> PlacementPrep Hub</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a><a href="about.html">About</a><a href="contact.html">Contact</a>
     </div>
-  </footer>
+    <div class="footer-copy">Built for CS students</div>
+  </div>
+</footer>
 
-  <script src="js/main.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

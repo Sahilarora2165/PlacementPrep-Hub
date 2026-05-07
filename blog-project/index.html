@@ -3,111 +3,172 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Campus Compass | Student Knowledge Blog</title>
+  <title>PlacementPrep Hub | CS Placement Guides for Engineering Students</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="site-header">
-    <nav class="navbar container">
-      <a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a>
-      <button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
-      <div class="nav-links" id="navLinks"></div>
-    </nav>
-  </header>
 
-  <main>
-    <!-- Hero -->
-    <section class="hero">
-      <div class="container hero-grid">
+<div class="reading-progress"><span id="readingProgress"></span></div>
+
+<header class="site-header">
+  <nav class="navbar container">
+    <a class="logo" href="index.html">
+      <span class="logo-mark">PP</span>
+      PlacementPrep
+    </a>
+    <button class="hamburger" id="hamburger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+</header>
+
+<main>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="hero-kicker">CS Placement Hub for Engineering Students</div>
+        <h1>Your guide to <br><em id="typingText">placement prep.</em></h1>
+        <p class="lead">Student-written guides on DSA, resume building, system design, interviews, and internships — all in one place.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="blog.html"><i class="fa-solid fa-book-open"></i> Browse Guides</a>
+          <a class="btn btn-secondary" href="signup.html"><i class="fa-solid fa-pen-nib"></i> Contribute</a>
+        </div>
+        <div style="display:flex;gap:24px;margin-top:28px;flex-wrap:wrap">
+          <div><strong style="font-size:2rem;color:var(--accent)">3+</strong><br><span style="color:var(--muted);font-size:0.85rem">Seed guides</span></div>
+          <div><strong style="font-size:2rem;color:var(--accent)">8</strong><br><span style="color:var(--muted);font-size:0.85rem">Topics covered</span></div>
+          <div><strong style="font-size:2rem;color:var(--accent)">Free</strong><br><span style="color:var(--muted);font-size:0.85rem">Always</span></div>
+        </div>
+      </div>
+      <div class="editorial-note" aria-hidden="true">
+        <div style="display:flex;gap:6px;margin-bottom:14px">
+          <span style="width:12px;height:12px;border-radius:50%;background:#f25f5c;display:inline-block"></span>
+          <span style="width:12px;height:12px;border-radius:50%;background:#f5a623;display:inline-block"></span>
+          <span style="width:12px;height:12px;border-radius:50%;background:#a8e063;display:inline-block"></span>
+          <span style="margin-left:8px;font-family:var(--mono);font-size:0.72rem;color:var(--muted)">prep-checklist.md</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:0.85rem;line-height:1.8">
+          <div style="color:var(--accent)">$ cat placement-checklist.md</div>
+          <div>&nbsp;</div>
+          <div style="color:#f5a623">## Week 1-3</div>
+          <div style="color:var(--accent)">✓ Arrays, Strings, Hashmaps</div>
+          <div style="color:var(--accent)">✓ Time & Space complexity</div>
+          <div>&nbsp;</div>
+          <div style="color:#f5a623">## Week 4-7</div>
+          <div style="color:var(--accent)">✓ Trees, Graphs, DP</div>
+          <div>▒ Stacks, Queues [in progress]</div>
+          <div>&nbsp;</div>
+          <div style="color:#f5a623">## Resume</div>
+          <div>▒ Projects section updated</div>
+          <div>□ ATS-friendly format</div>
+          <div>&nbsp;</div>
+          <div style="color:var(--accent)">$ _</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories strip -->
+  <section style="border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0;background:var(--card)">
+    <div class="tabs" style="margin:0;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none">
+      <a href="blog.html?cat=DSA+%26+Coding" class="tab" style="flex-shrink:0;text-decoration:none"><i class="fa-solid fa-code"></i> DSA & Coding</a>
+      <a href="blog.html?cat=Resume+%26+Profile" class="tab" style="flex-shrink:0;text-decoration:none"><i class="fa-solid fa-file-lines"></i> Resume</a>
+      <a href="blog.html?cat=System+Design" class="tab" style="flex-shrink:0;text-decoration:none"><i class="fa-solid fa-diagram-project"></i> System Design</a>
+      <a href="blog.html?cat=Interview+Prep" class="tab" style="flex-shrink:0;text-decoration:none"><i class="fa-solid fa-comments"></i> Interviews</a>
+      <a href="blog.html?cat=Internships" class="tab" style="flex-shrink:0;text-decoration:none"><i class="fa-solid fa-briefcase"></i> Internships</a>
+      <a href="blog.html?cat=Core+Subjects" class="tab" style="flex-shrink:0;text-decoration:none"><i class="fa-solid fa-book"></i> Core Subjects</a>
+      <a href="blog.html?cat=Off-Campus" class="tab" style="flex-shrink:0;text-decoration:none"><i class="fa-solid fa-rocket"></i> Off-Campus</a>
+    </div>
+  </section>
+
+  <!-- Featured -->
+  <section class="section">
+    <div class="container">
+      <div class="section-heading">
         <div>
-          <span class="hero-kicker">Student knowledge, saved in one place</span>
-          <h1>Share <span id="typingText" class="typing-cursor"></span></h1>
-          <p class="lead">Campus Compass helps students publish practical guides for placements, projects, exams, campus life, events, and technical learning.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="blog.html"><i class="fa-solid fa-book-open"></i> Start Reading</a>
-            <a class="btn btn-secondary" href="create.html"><i class="fa-solid fa-pen-nib"></i> Write a Guide</a>
-          </div>
-          <div class="hero-feature-rail">
-            <span><i class="fa-solid fa-bookmark"></i> Save guides</span>
-            <span><i class="fa-solid fa-comments"></i> Discuss updates</span>
-            <span><i class="fa-solid fa-chart-line"></i> Track trending</span>
-          </div>
+          <span class="eyebrow" style="margin-bottom:10px;display:inline-block">Trending</span>
+          <h2>Most helpful guides</h2>
         </div>
-        <aside class="editorial-note">
-          "Useful student knowledge should not disappear inside chats. Save a guide, comment with updates, and keep the next batch from starting over."
-        </aside>
+        <a class="btn btn-secondary" href="blog.html">View all <i class="fa-solid fa-arrow-right"></i></a>
       </div>
-    </section>
+      <div class="grid grid-3" id="featuredPosts"></div>
+    </div>
+  </section>
 
-    <!-- Featured Posts -->
-    <section class="section">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Featured Posts</p>
-            <h2>Most useful right now</h2>
-          </div>
-          <a class="btn btn-secondary" href="blog.html">View All</a>
+  <!-- Trending Grid -->
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <div class="section-heading">
+        <h2>Ranked by community</h2>
+      </div>
+      <div class="grid grid-3" id="trendingPosts"></div>
+    </div>
+  </section>
+
+  <!-- Latest from students -->
+  <section class="section" style="background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow" style="margin-bottom:10px;display:inline-block;background:linear-gradient(135deg,rgba(70,199,142,0.92),rgba(70,199,142,0.92))">New</span>
+          <h2>Student submissions</h2>
         </div>
-        <div class="featured-carousel grid" id="featuredPosts"></div>
+        <a class="btn btn-secondary" href="create.html"><i class="fa-solid fa-pen-nib"></i> Write a guide</a>
       </div>
-    </section>
+      <div class="grid grid-3" id="latestPosts"></div>
+    </div>
+  </section>
 
-    <!-- Trending -->
-    <section class="section">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Trending</p>
-            <h2>Ranked by likes and comments</h2>
-          </div>
-        </div>
-        <div id="trendingPosts" class="grid grid-3"></div>
+  <!-- CTA -->
+  <section class="section">
+    <div class="container" style="max-width:680px;text-align:center;margin:0 auto">
+      <span class="eyebrow" style="margin-bottom:16px;display:inline-block">Contribute</span>
+      <h2>Know something useful? Write a guide.</h2>
+      <p class="lead" style="margin:16px auto 32px">Every placement season, students search for the same answers. Publish what worked for you and help the next batch skip the confusion.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a class="btn btn-primary" href="signup.html"><i class="fa-solid fa-user-plus"></i> Create Account</a>
+        <a class="btn btn-secondary" href="blog.html">Browse first</a>
       </div>
-    </section>
+    </div>
+  </section>
+</main>
 
-    <!-- Latest Posts -->
-    <section class="section">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Latest Posts</p>
-            <h2>Student submissions</h2>
-          </div>
-        </div>
-        <div id="latestPosts" class="grid grid-3"></div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Share Modal -->
-  <div class="share-modal" id="shareModal">
-    <div class="share-modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h3 style="margin:0">Share this post</h3>
-        <button class="btn btn-secondary" id="closeShareModal" style="min-height:38px;padding:6px 12px"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="share-buttons">
-        <button class="btn btn-primary" id="shareTwitter"><i class="fa-brands fa-twitter"></i> Twitter</button>
-        <button class="btn btn-secondary" id="copyShareLink"><i class="fa-regular fa-copy"></i> Copy</button>
-      </div>
-      <div class="share-link-field">
-        <input type="text" id="shareUrl" readonly>
-      </div>
+<!-- Share Modal -->
+<div class="share-modal" id="shareModal">
+  <div class="share-modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3>Share this guide</h3>
+      <button class="btn btn-ghost btn-sm" id="closeShareModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="share-buttons">
+      <button class="btn btn-primary" id="shareTwitter"><i class="fa-brands fa-twitter"></i> Twitter</button>
+      <button class="btn btn-secondary" id="copyShareLink"><i class="fa-regular fa-copy"></i> Copy</button>
+    </div>
+    <div class="share-link-field">
+      <input type="text" id="shareUrl" readonly value="">
     </div>
   </div>
+</div>
 
-  <footer class="site-footer">
-    <div class="container footer-grid">
-      <strong>Campus Compass</strong>
-      <div class="footer-links"><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>
+<div class="toast" id="globalToast"></div>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="logo"><span class="logo-mark">PP</span> PlacementPrep Hub</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="blog.html">Guides</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
     </div>
-  </footer>
+    <div class="footer-copy">Built for CS students</div>
+  </div>
+</footer>
 
-  <script src="js/main.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /* =========================================================
-   Campus Compass - Vanilla JavaScript (No dependencies)
+   PlacementPrep Hub - Vanilla JavaScript (No dependencies)
    ========================================================= */
 
 const BlogStore = {
@@ -19,18 +19,191 @@ const BlogStore = {
   }
 };
 
+/* ===== Lightweight backend sync (same JS stack) ===== */
+const SyncStoreAPI = {
+  enabled: /^https?:/i.test(window.location.protocol),
+  getLocalSnapshot() {
+    const snapshot = {};
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      const raw = localStorage.getItem(key);
+      if (raw == null) continue;
+      try { snapshot[key] = JSON.parse(raw); }
+      catch (e) { console.warn("Skipping non-JSON local key:", key, e); }
+    }
+    return snapshot;
+  },
+  async mergeLocalIntoServer(data) {
+    if (!this.enabled) return;
+    try {
+      await fetch("/api/store", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data })
+      });
+    } catch (e) {
+      console.warn("Server merge sync skipped:", e);
+    }
+  },
+  async hydrateLocalFromServer() {
+    if (!this.enabled) return;
+    try {
+      const response = await fetch("/api/store", { headers: { "Accept": "application/json" } });
+      if (!response.ok) return;
+      const payload = await response.json();
+      const serverData = payload && payload.data && typeof payload.data === "object" ? payload.data : {};
+      const localData = this.getLocalSnapshot();
+
+      // One-time reconciliation:
+      // - Pull server data into local storage
+      // - Push local-only keys to server so existing browser data is not lost
+      Object.keys(serverData).forEach((key) => {
+        try { localStorage.setItem(key, JSON.stringify(serverData[key])); }
+        catch (e) { console.error("localStorage hydrate:", key, e); }
+      });
+
+      const localOnly = {};
+      Object.keys(localData).forEach((key) => {
+        if (!(key in serverData)) localOnly[key] = localData[key];
+      });
+      if (Object.keys(localOnly).length > 0) await this.mergeLocalIntoServer(localOnly);
+    } catch (e) {
+      console.warn("Server hydrate skipped:", e);
+    }
+  },
+  async setKey(key, value) {
+    if (!this.enabled) return;
+    try {
+      await fetch(`/api/store/${encodeURIComponent(key)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value })
+      });
+    } catch (e) {
+      console.warn("Server sync set failed:", key, e);
+    }
+  },
+  async removeKey(key) {
+    if (!this.enabled) return;
+    try {
+      await fetch(`/api/store/${encodeURIComponent(key)}`, { method: "DELETE" });
+    } catch (e) {
+      console.warn("Server sync remove failed:", key, e);
+    }
+  }
+};
+
+const _originalSet = BlogStore.set.bind(BlogStore);
+BlogStore.set = function(key, value) {
+  const ok = _originalSet(key, value);
+  // Fire-and-forget server persistence to keep current synchronous UI flow unchanged.
+  SyncStoreAPI.setKey(key, value);
+  return ok;
+};
+
+const _originalRemove = BlogStore.remove.bind(BlogStore);
+BlogStore.remove = function(key) {
+  _originalRemove(key);
+  SyncStoreAPI.removeKey(key);
+};
+
 /* ===== Seed Data ===== */
 const seedPosts = [
-  { id: "seed-1", title: "How to Build a Clean Mini Project Report", category: "Projects", coverImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80", content: "A useful mini project report is not just a file submitted at the end of the semester. It is the written proof that your problem statement, design choices, implementation, and testing were connected.\n\nStart with a short problem definition, then explain the users, modules, data flow, screenshots, validations, and limitations. Keep code snippets small and explain only the parts that show logic. Add testing cases with expected and actual results. End with future scope that is realistic, not inflated.", excerpt: "A practical checklist for writing project documentation that actually helps during viva.", author: "Campus Desk", authorEmail: "campus@lumen.test", authorBio: "Curates student project and submission guides.", expertise: "Projects", date: "Apr 12, 2026", likes: 0, status: "published" },
-  { id: "seed-2", title: "Placement Prep Without Losing the Semester", category: "Placements", coverImage: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80", content: "Placement preparation works better when it is treated as a weekly habit, not a last-month emergency. Keep three tracks open: aptitude practice, core subject revision, and one visible project that you can explain clearly.\n\nUse short blocks during regular college weeks. Revise data structures twice a week, solve aptitude sets on alternate days, and write down interview answers after every mock. The goal is not to finish every resource. The goal is to become consistent enough that interviews do not feel unfamiliar.", excerpt: "A realistic weekly approach for balancing placement preparation with classes.", author: "Career Cell Notes", authorEmail: "career@lumen.test", authorBio: "Summarizes placement workflows and interview preparation habits.", expertise: "Placements", date: "Apr 20, 2026", likes: 0, status: "published" },
-  { id: "seed-3", title: "What to Check Before an Internal Exam", category: "Exams", coverImage: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1200&q=80", content: "A good internal exam plan starts with the previous question pattern. First list the units that are confirmed, then mark repeated topics, formulas, diagrams, and definitions that usually carry direct marks.\n\nDo not rewrite the whole notebook. Make a compact revision sheet for each unit. Keep one page for formulas, one for important diagrams, and one for short definitions. On the final evening, solve questions instead of only reading answers.", excerpt: "A compact method for preparing useful revision sheets before internals.", author: "Study Desk", authorEmail: "study@lumen.test", authorBio: "Collects exam preparation and revision advice.", expertise: "Exams", date: "Apr 27, 2026", likes: 0, status: "published" }
+  {
+    id: "seed-1",
+    createdAt: 1712870400000,
+    title: "Placement plan that works (without losing the semester)",
+    category: "Interview Prep",
+    coverImage: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+    content: "Placement preparation works better when it is treated as a weekly habit, not a last-month emergency. Keep three tracks open: DSA practice, core subject revision, and one visible project that you can explain clearly.\n\nUse short blocks during regular college weeks. Revise data structures twice a week, solve aptitude sets on alternate days, and write down interview answers after every mock. The goal is not to finish every resource. The goal is to become consistent enough that interviews do not feel unfamiliar.",
+    excerpt: "A realistic weekly approach for balancing placement preparation with classes.",
+    author: "Placement Desk",
+    authorEmail: "placement@lumen.test",
+    authorBio: "Curates student placement workflows and prep habits.",
+    expertise: "Interview Prep",
+    date: "Apr 12, 2026",
+    likes: 0,
+    status: "published"
+  },
+  {
+    id: "seed-2",
+    createdAt: 1713571200000,
+    title: "Resume checklist: what recruiters actually scan first",
+    category: "Resume & Profile",
+    coverImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+    content: "A good resume is a fast scan, not a story. Keep your header clean, keep links working, and write projects like: problem → approach → impact.\n\nUse numbers where possible. Avoid walls of text. For each project, show the tech stack and your role. Keep one strong project that you can explain end-to-end in interviews.",
+    excerpt: "A quick, practical resume checklist for campus and off-campus placements.",
+    author: "Resume Notes",
+    authorEmail: "resume@lumen.test",
+    authorBio: "Summarizes resume patterns that help in shortlists.",
+    expertise: "Resume & Profile",
+    date: "Apr 20, 2026",
+    likes: 0,
+    status: "published"
+  },
+  {
+    id: "seed-3",
+    createdAt: 1714176000000,
+    title: "DSA routine: 30 minutes daily (that scales to interviews)",
+    category: "DSA & Coding",
+    coverImage: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1200&q=80",
+    content: "Consistency beats marathon study. Start with 30 minutes a day: 1 problem + 10 minutes of review.\n\nTrack patterns: sliding window, two pointers, hashing, stacks/queues, trees, graphs, DP. Every weekend, do one timed mock. The goal is to become fluent with patterns, not memorize solutions.",
+    excerpt: "A small daily routine that compiles into real interview confidence.",
+    author: "DSA Desk",
+    authorEmail: "dsa@lumen.test",
+    authorBio: "Collects practical DSA routines and interview patterns.",
+    expertise: "DSA & Coding",
+    date: "Apr 27, 2026",
+    likes: 0,
+    status: "published"
+  }
 ];
 
-const campusCategories = ["All", "Placements", "Projects", "Exams", "Campus Life", "Events", "Tech Tutorials", "Travel", "Opinion"];
+const placementCategories = [
+  "All",
+  "DSA & Coding",
+  "Resume & Profile",
+  "System Design",
+  "Interview Prep",
+  "Internships",
+  "Core Subjects",
+  "CGPA & Academics",
+  "Off-Campus"
+];
+
+function showToast(message, kind = "success") {
+  const toast = document.getElementById("globalToast");
+  if (!toast) return;
+  // If jQuery is present, use it for smooth toast transitions.
+  if (window.jQuery) {
+    const $t = window.jQuery(toast);
+    toast.style.borderColor = kind === "error" ? "rgba(255, 107, 107, 0.35)" : "rgba(31, 78, 216, 0.26)";
+    toast.style.color = kind === "error" ? "#ff6b6b" : "var(--accent-2)";
+    toast.style.background = kind === "error" ? "rgba(255, 107, 107, 0.08)" : "rgba(31, 78, 216, 0.08)";
+    toast.innerHTML = message;
+    $t.stop(true, true).fadeIn(160);
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => { $t.fadeOut(180); }, 2600);
+    return;
+  }
+
+  toast.style.display = "block";
+  toast.style.borderColor = kind === "error" ? "rgba(255, 107, 107, 0.35)" : "rgba(31, 78, 216, 0.26)";
+  toast.style.color = kind === "error" ? "#ff6b6b" : "var(--accent-2)";
+  toast.style.background = kind === "error" ? "rgba(255, 107, 107, 0.08)" : "rgba(31, 78, 216, 0.08)";
+  toast.innerHTML = message;
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => { toast.style.display = "none"; }, 2600);
+}
 
 /* ===== Data Access ===== */
 function getStoredPosts() {
-  return BlogStore.get("posts", []).map(p => ({ ...p, status: p.status || "published" }));
+  return BlogStore.get("posts", []).map(p => ({
+    ...p,
+    status: p.status || "published",
+    createdAt: typeof p.createdAt === "number" ? p.createdAt : Date.now()
+  }));
 }
 
 function getAllPosts() {
@@ -39,8 +212,65 @@ function getAllPosts() {
 
 function getLoggedInUser() { return BlogStore.get("loggedInUser", null); }
 function getUserRecord(email) { return BlogStore.get("users", []).find(u => u.email === email) || null; }
-function getLikedPosts() { return BlogStore.get("likedPosts", []).map(String); }
-function getPostLikes() { return BlogStore.get("postLikes", {}); }
+
+function getOrCreateGuestId() {
+  const existing = BlogStore.get("guestId", "");
+  if (existing) return String(existing);
+  const id = "guest-" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+  BlogStore.set("guestId", id);
+  return id;
+}
+
+function getLikeActorId() {
+  const u = getLoggedInUser();
+  return u ? String(u.email) : getOrCreateGuestId();
+}
+
+function getLikesByPost() {
+  const map = BlogStore.get("likesByPost", null);
+  if (map && typeof map === "object") return map;
+  return {};
+}
+
+function setLikesByPost(map) {
+  BlogStore.set("likesByPost", map || {});
+}
+
+function migrateLegacyLikesIfNeeded() {
+  // Legacy keys used a global likedPosts array + postLikes numeric map (not per-user).
+  // We migrate once by converting the current browser's likedPosts into likesByPost entries
+  // attributed to the current actor (or guest id).
+  if (BlogStore.get("likesMigrated_v2", false)) return;
+
+  const legacyLiked = BlogStore.get("likedPosts", null);
+  const legacyCounts = BlogStore.get("postLikes", null);
+  const next = getLikesByPost();
+  const actor = getLikeActorId();
+
+  if (Array.isArray(legacyLiked)) {
+    legacyLiked.map(String).forEach(postId => {
+      const arr = Array.isArray(next[postId]) ? next[postId].map(String) : [];
+      if (!arr.includes(actor)) arr.push(actor);
+      next[postId] = arr;
+    });
+  }
+
+  // If legacyCounts exists but likesByPost is empty for a post, keep the numeric count as a fallback.
+  // We store it separately so counts don't suddenly drop to 0 on migration.
+  if (legacyCounts && typeof legacyCounts === "object") {
+    const fallback = BlogStore.get("likeCountFallback", {});
+    Object.keys(legacyCounts).forEach(pid => {
+      const n = Number(legacyCounts[pid]);
+      if (!Number.isFinite(n) || n <= 0) return;
+      const hasList = Array.isArray(next[pid]) && next[pid].length > 0;
+      if (!hasList) fallback[pid] = Math.max(0, Math.floor(n));
+    });
+    BlogStore.set("likeCountFallback", fallback);
+  }
+
+  setLikesByPost(next);
+  BlogStore.set("likesMigrated_v2", true);
+}
 
 /* ===== Utility ===== */
 function escapeHTML(v) {
@@ -66,8 +296,21 @@ function getReadingLevel(text) {
 }
 
 function getLikeCount(post) {
-  const likes = getPostLikes();
-  return typeof likes[post.id] === "number" ? likes[post.id] : Number(post.likes || 0);
+  migrateLegacyLikesIfNeeded();
+  const map = getLikesByPost();
+  const arr = Array.isArray(map[post.id]) ? map[post.id] : null;
+  if (arr) return arr.length;
+  const fallback = BlogStore.get("likeCountFallback", {});
+  if (typeof fallback[post.id] === "number") return fallback[post.id];
+  return Number(post.likes || 0) || 0;
+}
+
+function isLikedByCurrentUser(postId) {
+  migrateLegacyLikesIfNeeded();
+  const actor = getLikeActorId();
+  const map = getLikesByPost();
+  const arr = Array.isArray(map[postId]) ? map[postId].map(String) : [];
+  return arr.includes(actor);
 }
 
 function getCommentCount(postId) { return BlogStore.get(`comments:${postId}`, []).length; }
@@ -190,14 +433,8 @@ function initTheme() {
 function initHeroTyping() {
   const target = document.getElementById("typingText");
   if (!target) return;
-  const phrases = ["placement notes.", "project guides.", "exam checklists.", "campus tips."];
-  let phraseIdx = 0, charIdx = 0;
-  setInterval(() => {
-    const phrase = phrases[phraseIdx];
-    target.textContent = phrase.substring(0, charIdx);
-    charIdx++;
-    if (charIdx > phrase.length + 8) { charIdx = 0; phraseIdx = (phraseIdx + 1) % phrases.length; }
-  }, 110);
+  // Keep it calm: no looping typing animation.
+  target.textContent = "placement prep.";
 }
 
 /* ===== Home Page ===== */
@@ -210,7 +447,10 @@ function initHomeLatest() {
   if (featured) featured.innerHTML = trend.slice(0, 6).map(renderPostCard).join("");
   if (trending) trending.innerHTML = trend.slice(0, 3).map(renderPostCard).join("");
   if (!latest) return;
-  const posts = getStoredPosts().filter(p => p.status === "published").reverse();
+  const posts = getAllPosts()
+    .slice()
+    .sort((a, b) => (Number(b.createdAt || 0)) - (Number(a.createdAt || 0)))
+    .slice(0, 6);
   latest.innerHTML = posts.length
     ? posts.map(renderPostCard).join("")
     : `<p class="lead">No student submissions yet. Sign up, publish a campus guide, and it will appear here instantly.</p>`;
@@ -233,12 +473,22 @@ function initBlogListing() {
   let currentPage = 1;
   const perPage = 6;
 
+  // Deep links: blog.html?cat=DSA%20%26%20Coding&q=arrays&sort=likes
+  const params = new URLSearchParams(window.location.search);
+  const initialCat = params.get("cat");
+  const initialQ = params.get("q");
+  const initialSort = params.get("sort");
+  if (initialCat && placementCategories.includes(initialCat)) selectedCategory = initialCat;
+  if (typeof initialQ === "string" && initialQ.trim()) searchText = initialQ.trim();
+  if (initialSort && ["latest", "likes", "shortest", "longest"].includes(initialSort)) sortMode = initialSort;
+
   function getFilteredPosts() {
     let posts = getAllPosts().map(p => ({
       ...p,
       _likes: getLikeCount(p),
       _comments: getCommentCount(p.id),
-      _readTime: calculateReadTime(p.content)
+      _readTime: calculateReadTime(p.content),
+      _createdAt: typeof p.createdAt === "number" ? p.createdAt : 0
     }));
 
     if (selectedCategory !== "All") posts = posts.filter(p => p.category === selectedCategory);
@@ -256,7 +506,7 @@ function initBlogListing() {
     if (sortMode === "likes") posts.sort((a, b) => b._likes - a._likes);
     else if (sortMode === "shortest") posts.sort((a, b) => a._readTime - b._readTime);
     else if (sortMode === "longest") posts.sort((a, b) => b._readTime - a._readTime);
-    else posts.reverse();
+    else posts.sort((a, b) => b._createdAt - a._createdAt);
 
     return posts;
   }
@@ -287,7 +537,7 @@ function initBlogListing() {
 
   // Category tabs
   if (categoryContainer) {
-    categoryContainer.innerHTML = campusCategories.map(cat =>
+    categoryContainer.innerHTML = placementCategories.map(cat =>
       `<button class="tab ${cat === selectedCategory ? "active" : ""}" data-category="${cat}">${cat}</button>`
     ).join("");
     categoryContainer.addEventListener("click", e => {
@@ -302,6 +552,7 @@ function initBlogListing() {
   }
 
   if (searchInput) {
+    if (searchText) searchInput.value = searchText;
     let debounceTimer;
     searchInput.addEventListener("input", () => {
       clearTimeout(debounceTimer);
@@ -310,6 +561,7 @@ function initBlogListing() {
   }
 
   if (sortSelect) {
+    sortSelect.value = sortMode;
     sortSelect.addEventListener("change", () => { sortMode = sortSelect.value; currentPage = 1; render(); });
   }
 
@@ -330,13 +582,12 @@ function initSinglePost() {
   }
 
   // Set dynamic page title
-  document.title = `${post.title} | Campus Compass`;
+  document.title = `${post.title} | PlacementPrep Hub`;
 
   trackPostView(post.id);
 
   const commentsKey = `comments:${post.id}`;
-  const likedPosts = getLikedPosts();
-  const liked = likedPosts.includes(String(post.id));
+  const liked = isLikedByCurrentUser(String(post.id));
   const authorPosts = getAllPosts().filter(item => item.authorEmail === post.authorEmail).length;
   const authorBio = post.authorBio || (getUserRecord(post.authorEmail) && getUserRecord(post.authorEmail).bio) || "Campus contributor";
   const expertise = post.expertise || (getUserRecord(post.authorEmail) && getUserRecord(post.authorEmail).expertise) || post.category;
@@ -366,6 +617,28 @@ function initSinglePost() {
       </div>
       <div class="article-content section-small">${post.content.includes('<') ? post.content : post.content.split("\n").filter(Boolean).map(p => `<p>${escapeHTML(p)}</p>`).join("")}</div>
       <button class="btn btn-secondary" id="likeButton" data-post-id="${escapeHTML(post.id)}" data-liked="${liked}"><i class="${liked ? "fa-solid" : "fa-regular"} fa-heart"></i> <span id="likeCount">${getLikeCount(post)}</span> Likes</button>
+      <div class="dashboard-panel" id="reportPanel" style="margin-top:16px">
+        <p class="eyebrow">Report guide</p>
+        <form id="reportForm" novalidate>
+          <div class="field">
+            <label>Reason</label>
+            <select id="reportReason">
+              <option value="">Choose a reason</option>
+              <option>Outdated info</option>
+              <option>Incorrect details</option>
+              <option>Spam / promotion</option>
+              <option>Inappropriate content</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Optional note</label>
+            <input id="reportNote" type="text" placeholder="Add a short note (optional)">
+          </div>
+          <p class="error" id="reportError"></p>
+          <p class="success-message" id="reportSuccess"></p>
+          <button class="btn btn-primary btn-sm" type="submit"><i class="fa-regular fa-flag"></i> Submit report</button>
+        </form>
+      </div>
       <aside class="dashboard-panel author-card">
         <p class="eyebrow">Author Profile</p>
         <h3>${escapeHTML(post.author)}</h3>
@@ -428,11 +701,11 @@ function initComments(postId) {
   if (commentForm) {
     commentForm.addEventListener("submit", e => {
       e.preventDefault();
-      const name = document.getElementById("commentName").value.trim();
-      const email = document.getElementById("commentEmail").value.trim();
+      const user = getLoggedInUser();
+      const name = user ? user.fullName : "Guest reader";
+      const email = user ? user.email : "";
       const comment = document.getElementById("commentText").value.trim();
-      if (!name || !email || !comment) { commentError.textContent = "All fields required."; return; }
-      if (!isValidEmail(email)) { commentError.textContent = "Enter a valid email."; return; }
+      if (!comment) { commentError.textContent = "Write a comment first."; return; }
       const comments = BlogStore.get(commentsKey, []);
       comments.push({ id: Date.now().toString(), name, email, comment, date: formatDate(new Date()), replies: [] });
       BlogStore.set(commentsKey, comments);
@@ -616,6 +889,7 @@ function initCreatePost() {
     const posts = getStoredPosts();
     const post = {
       id: Date.now().toString(),
+      createdAt: Date.now(),
       title: t,
       category: c,
       coverImage: coverImage && coverImage.value.trim() || "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80",
@@ -654,7 +928,10 @@ function initCreatePost() {
 /* ===== Auth ===== */
 function requireAuth() {
   const user = getLoggedInUser();
-  if (!user) window.location.href = "login.html";
+  if (!user) {
+    BlogStore.set("authRedirect", window.location.pathname + window.location.search);
+    window.location.href = "login.html";
+  }
   return user;
 }
 
@@ -708,7 +985,9 @@ function initLogin() {
       return;
     }
     BlogStore.set("loggedInUser", { fullName: user.fullName, email: user.email, bio: user.bio || "", expertise: user.expertise || "" });
-    window.location.href = "index.html";
+    const redirect = BlogStore.get("authRedirect", "index.html");
+    BlogStore.remove("authRedirect");
+    window.location.href = redirect || "index.html";
   });
 }
 
@@ -745,20 +1024,32 @@ function initEventDelegation() {
   document.addEventListener("click", e => {
     const btn = e.target.closest("#likeButton");
     if (btn) {
-      const liked = btn.getAttribute("data-liked") === "true";
+      migrateLegacyLikesIfNeeded();
       const postId = String(btn.getAttribute("data-post-id"));
-      const count = Number(document.getElementById("likeCount").textContent) + (liked ? -1 : 1);
-      const postLikes = getPostLikes();
-      let likedPosts = getLikedPosts();
-      postLikes[postId] = Math.max(0, count);
-      if (liked) { likedPosts = likedPosts.filter(id => id !== postId); } else { likedPosts.push(postId); }
-      BlogStore.set("postLikes", postLikes);
-      BlogStore.set("likedPosts", Array.from(new Set(likedPosts)));
-      btn.setAttribute("data-liked", String(!liked));
+      const actor = getLikeActorId();
+      const map = getLikesByPost();
+      const list = Array.isArray(map[postId]) ? map[postId].map(String) : [];
+      const already = list.includes(actor);
+      const nextList = already ? list.filter(a => a !== actor) : list.concat(actor);
+      map[postId] = Array.from(new Set(nextList));
+      setLikesByPost(map);
+
+      // Clear fallback count for this post since we now have a real list.
+      const fallback = BlogStore.get("likeCountFallback", {});
+      if (fallback && typeof fallback === "object" && typeof fallback[postId] === "number") {
+        delete fallback[postId];
+        BlogStore.set("likeCountFallback", fallback);
+      }
+
+      const isNowLiked = !already;
+      btn.setAttribute("data-liked", String(isNowLiked));
       const span = document.getElementById("likeCount");
-      if (span) span.textContent = Math.max(0, count);
-      btn.querySelector("i").classList.toggle("fa-regular");
-      btn.querySelector("i").classList.toggle("fa-solid");
+      if (span) span.textContent = String((map[postId] || []).length);
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.classList.toggle("fa-regular", !isNowLiked);
+        icon.classList.toggle("fa-solid", isNowLiked);
+      }
     }
   });
 
@@ -770,14 +1061,15 @@ function initEventDelegation() {
     const id = String(btn.getAttribute("data-id"));
     const key = getSavedKey();
     const saved = BlogStore.get(key, []).map(String);
-    const isSaved = saved.includes(id);
-    const next = isSaved ? saved.filter(pid => pid !== id) : saved.concat(id);
+    const wasSaved = saved.includes(id);
+    const next = wasSaved ? saved.filter(pid => pid !== id) : saved.concat(id);
     BlogStore.set(key, Array.from(new Set(next)));
     document.querySelectorAll(`.save-post-btn[data-id="${CSS.escape(id)}"]`).forEach(b => {
       const icon = b.querySelector("i");
       const span = b.querySelector("span");
-      if (icon) { icon.classList.toggle("fa-regular", isSaved); icon.classList.toggle("fa-solid", !isSaved); }
-      if (span) span.textContent = isSaved ? "Save" : "Saved";
+      const isNowSaved = !wasSaved;
+      if (icon) { icon.classList.toggle("fa-regular", !isNowSaved); icon.classList.toggle("fa-solid", isNowSaved); }
+      if (span) span.textContent = isNowSaved ? "Saved" : "Save";
     });
     if (window.renderDashboard) window.renderDashboard();
   });
@@ -786,14 +1078,24 @@ function initEventDelegation() {
   document.addEventListener("click", e => {
     const btn = e.target.closest(".share-post-btn");
     if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
     const id = btn.getAttribute("data-id");
     const modal = document.getElementById("shareModal");
     const urlInput = document.getElementById("shareUrl");
-    if (modal && urlInput) {
-      const url = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, "")}post.html?id=${encodeURIComponent(id)}`;
-      urlInput.value = url;
-      modal.classList.add("open");
+    const shareUrl = new URL(`post.html?id=${encodeURIComponent(id)}`, window.location.href);
+    const post = getAllPosts().find(p => String(p.id) === String(id));
+    const title = post ? post.title : "PlacementPrep guide";
+
+    // Prefer native share if available.
+    if (navigator.share) {
+      navigator.share({ title, text: title, url: shareUrl.href }).catch(() => {});
+      return;
     }
+
+    if (!modal || !urlInput) { showToast("Share modal not available on this page.", "error"); return; }
+    urlInput.value = shareUrl.href;
+    modal.classList.add("open");
   });
 
   // Close share modal
@@ -810,7 +1112,11 @@ function initEventDelegation() {
     const btn = e.target.closest("#copyShareLink");
     if (!btn) return;
     const input = document.getElementById("shareUrl");
-    if (input) { input.select(); navigator.clipboard.writeText(input.value); btn.textContent = "Copied!"; setTimeout(() => { btn.textContent = "Copy"; }, 2000); }
+    if (!input) return;
+    input.select();
+    navigator.clipboard.writeText(input.value)
+      .then(() => { btn.textContent = "Copied!"; setTimeout(() => { btn.textContent = "Copy"; }, 2000); })
+      .catch(() => { showToast("Copy failed. Select the link and copy manually.", "error"); });
   });
 
   // Share to Twitter
@@ -880,10 +1186,17 @@ function initEventDelegation() {
     const id = btn.getAttribute("data-id");
     if (!confirm("Delete this post?")) return;
     const posts = BlogStore.get("posts", []).filter(p => String(p.id) !== String(id));
-    const postLikes = getPostLikes();
-    delete postLikes[id];
     BlogStore.set("posts", posts);
-    BlogStore.set("postLikes", postLikes);
+    const likesByPost = BlogStore.get("likesByPost", {});
+    if (likesByPost && typeof likesByPost === "object") {
+      delete likesByPost[id];
+      BlogStore.set("likesByPost", likesByPost);
+    }
+    const fallback = BlogStore.get("likeCountFallback", {});
+    if (fallback && typeof fallback === "object") {
+      delete fallback[id];
+      BlogStore.set("likeCountFallback", fallback);
+    }
     BlogStore.remove("comments:" + id);
     if (window.renderDashboard) window.renderDashboard();
   });
@@ -1006,7 +1319,8 @@ function initSmoothExperience() {
 }
 
 /* ===== Init ===== */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await SyncStoreAPI.hydrateLocalFromServer();
   initNav();
   initHeroTyping();
   initHomeLatest();

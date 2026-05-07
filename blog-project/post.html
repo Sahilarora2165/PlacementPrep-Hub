@@ -3,93 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Post | Campus Compass</title>
+  <title>Post | PlacementPrep Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="reading-progress"><span id="readingProgress"></span></div>
-  <header class="site-header">
-    <nav class="navbar container">
-      <a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a>
-      <button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
-      <div class="nav-links" id="navLinks"></div>
-    </nav>
-  </header>
 
-  <main>
-    <article id="articleView"></article>
+<header class="site-header">
+  <nav class="navbar container">
+    <a class="logo" href="index.html"><span class="logo-mark">PP</span> PlacementPrep</a>
+    <button class="hamburger" id="hamburger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+</header>
 
-    <section class="section-small narrow" id="mediaAttachments"></section>
+<main>
+  <!-- Article renders here -->
+  <div id="articleView"></div>
 
-    <section class="section-small narrow" id="reportPanel">
-      <form class="form-card" id="reportForm" novalidate>
-        <p class="eyebrow">Report post</p>
-        <h2>Flag a problem</h2>
-        <div class="field">
-          <label for="reportReason">Reason</label>
-          <select id="reportReason">
-            <option value="">Choose reason</option>
-            <option>Outdated information</option>
-            <option>Incorrect information</option>
-            <option>Spam or irrelevant content</option>
-            <option>Unsafe or offensive content</option>
-          </select>
-        </div>
-        <div class="field"><label for="reportNote">Note</label><textarea id="reportNote" placeholder="Add useful context for review"></textarea></div>
-        <p class="error" id="reportError"></p>
-        <p class="success-message" id="reportSuccess"></p>
-        <button class="btn btn-primary" type="submit">Submit Report</button>
-      </form>
-    </section>
-
-    <!-- Comments -->
-    <section class="section narrow">
-      <div class="section-heading">
-        <div><p class="eyebrow">Discussion</p><h2>Comments</h2></div>
-      </div>
-      <form class="form-card" id="commentForm" novalidate>
-        <div class="field"><label for="commentName">Name</label><input id="commentName" type="text"></div>
-        <div class="field"><label for="commentEmail">Email</label><input id="commentEmail" type="email"></div>
-        <div class="field"><label for="commentText">Comment</label><textarea id="commentText"></textarea></div>
-        <p class="error" id="commentError"></p>
-        <button class="btn btn-primary" type="submit">Post Comment</button>
-      </form>
-      <div class="comments-list" id="commentsList"></div>
-    </section>
-
-    <section class="section narrow">
-      <div class="section-heading">
-        <div><p class="eyebrow">More Reading</p><h2>Related posts</h2></div>
-      </div>
-      <div class="grid grid-3" id="relatedPosts"></div>
-    </section>
-  </main>
-
-  <!-- Share Modal -->
-  <div class="share-modal" id="shareModal">
-    <div class="share-modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h3 style="margin:0">Share this post</h3>
-        <button class="btn btn-secondary" id="closeShareModal" style="min-height:38px;padding:6px 12px"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="share-buttons">
-        <button class="btn btn-primary" id="shareTwitter"><i class="fa-brands fa-twitter"></i> Twitter</button>
-        <button class="btn btn-secondary" id="copyShareLink"><i class="fa-regular fa-copy"></i> Copy</button>
-      </div>
-      <div class="share-link-field">
-        <input type="text" id="shareUrl" readonly>
-      </div>
+  <!-- Comments section -->
+  <div class="narrow section">
+    <div style="margin-bottom:32px">
+      <span class="eyebrow" style="margin-bottom:12px;display:inline-block">Discussion</span>
+      <h2 style="font-size:1.5rem">Comments</h2>
     </div>
+
+    <div class="form-card" style="margin-bottom:32px">
+      <h3 style="margin-bottom:20px;font-size:1rem">Leave a comment</h3>
+      <form id="commentForm" novalidate>
+        <div class="field"><label>Comment</label><textarea id="commentText" placeholder="Share your experience, ask a question, or add an update…"></textarea></div>
+        <p class="error" id="commentError"></p>
+        <button class="btn btn-primary btn-sm" type="submit">Post Comment</button>
+      </form>
+    </div>
+
+    <div id="commentsList"></div>
   </div>
 
-  <footer class="site-footer">
-    <div class="container footer-grid"><strong>Campus Compass</strong><div class="footer-links"><a href="blog.html">Blog</a><a href="about.html">About</a><a href="contact.html">Contact</a></div></div>
-  </footer>
+  <!-- Related posts -->
+  <div class="container section">
+    <div id="mediaAttachments" class="narrow" style="margin-bottom:24px"></div>
+    <div class="section-heading">
+      <span class="eyebrow">More Reading</span>
+      <a class="btn btn-secondary btn-sm" href="blog.html">All guides</a>
+    </div>
+    <div class="grid grid-3" id="relatedPosts"></div>
+  </div>
+</main>
 
-  <script src="js/main.js"></script>
+<!-- Share Modal -->
+<div class="share-modal" id="shareModal">
+  <div class="share-modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3>Share this guide</h3>
+      <button class="btn btn-ghost btn-sm" id="closeShareModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="share-buttons">
+      <button class="btn btn-primary" id="shareTwitter"><i class="fa-brands fa-twitter"></i> Twitter</button>
+      <button class="btn btn-secondary" id="copyShareLink"><i class="fa-regular fa-copy"></i> Copy</button>
+    </div>
+    <div class="share-link-field">
+      <input type="text" id="shareUrl" readonly value="">
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="globalToast"></div>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="logo"><span class="logo-mark">PP</span> PlacementPrep Hub</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a><a href="blog.html">Guides</a><a href="contact.html">Contact</a>
+    </div>
+    <div class="footer-copy">Built for CS students</div>
+  </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

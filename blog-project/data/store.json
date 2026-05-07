@@ -1,0 +1,47 @@
+{
+  "guestId": "guest-8dbe46420ec6d819dfe30b7cb",
+  "likesByPost": {
+    "seed-2": [
+      "guest-8dbe46420ec6d819dfe30b7cb"
+    ]
+  },
+  "likesMigrated_v2": true,
+  "savedPosts:guest": [
+    "seed-3"
+  ],
+  "analytics:seed-1": {
+    "views": 2
+  },
+  "analytics:seed-2": {
+    "views": 1
+  },
+  "users": [
+    {
+      "fullName": "Sahil Arora",
+      "email": "sahil@gmail.com",
+      "password": "pass123",
+      "bio": "sdc",
+      "expertise": "Internships"
+    }
+  ],
+  "loggedInUser": {
+    "fullName": "Sahil Arora",
+    "email": "sahil@gmail.com",
+    "bio": "sdc",
+    "expertise": "Internships"
+  },
+  "savedPosts:sahil@gmail.com": [
+    "seed-2",
+    "seed-1"
+  ],
+  "comments:seed-1": [
+    {
+      "id": "1778087338636",
+      "name": "Sahil Arora",
+      "email": "sahil@gmail.com",
+      "comment": "jkbj",
+      "date": "May 6, 2026",
+      "replies": []
+    }
+  ]
+}

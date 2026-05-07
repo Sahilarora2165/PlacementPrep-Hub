@@ -3,38 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contact | Campus Compass</title>
+  <title>Contact | PlacementPrep Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="site-header"><nav class="navbar container"><a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a><button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button><div class="nav-links" id="navLinks"></div></nav></header>
 
-  <main class="auth-shell cinematic-auth">
-    <section class="auth-panel auth-panel-wide">
-    <aside class="auth-copy">
-      <p class="eyebrow">Contact</p>
-      <h1>Send a useful update.</h1>
+<header class="site-header">
+  <nav class="navbar container">
+    <a class="logo" href="index.html"><span class="logo-mark">PP</span> PlacementPrep Hub</a>
+    <button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+</header>
+
+<main class="auth-shell">
+  <section class="form-card" style="max-width:640px">
+    <div style="margin-bottom:24px">
+      <span class="eyebrow" style="margin-bottom:12px;display:inline-block">Contact</span>
+      <h2>Send a useful update</h2>
       <p class="lead">Share feedback, correction requests, campus tips, or anything that should become easier for students to find.</p>
-    </aside>
-    <form class="form-card narrow" id="contactForm" novalidate>
-      <p class="eyebrow">Contact</p>
-      <h1>Send a note</h1>
-      <p class="lead">Messages are validated and saved in this browser, so the form behaves like a working contact workflow without a server.</p>
-      <div class="field"><label for="contactName">Name</label><input id="contactName" type="text"></div>
-      <div class="field"><label for="contactEmail">Email</label><input id="contactEmail" type="email"></div>
-      <div class="field"><label for="message">Message</label><textarea id="message" maxlength="600"></textarea></div>
-      <p class="meta" id="charCounter">0 characters</p>
+    </div>
+    <form id="contactForm" novalidate>
+      <div class="field"><label>Name</label><input id="contactName" type="text" placeholder="Your name"></div>
+      <div class="field"><label>Email</label><input id="contactEmail" type="email" placeholder="your@email.com"></div>
+      <div class="field"><label>Message</label><textarea id="message" maxlength="600" placeholder="Write your message here…" style="min-height:160px"></textarea></div>
+      <p style="font-size:0.85rem;color:var(--muted);margin:-10px 0 16px"><span id="charCounter">0</span> characters</p>
       <p class="error" id="contactError"></p>
       <p class="success-message" id="contactSuccess"></p>
-      <button class="btn btn-primary" type="submit">Send Message</button>
+      <button class="btn btn-primary" type="submit">Send Message <i class="fa-solid fa-paper-plane"></i></button>
     </form>
-    </section>
-  </main>
+  </section>
+</main>
 
-  <script src="js/main.js"></script>
+<div class="toast" id="globalToast"></div>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="logo"><span class="logo-mark">PP</span> PlacementPrep Hub</div>
+    <div class="footer-links"><a href="index.html">Home</a><a href="about.html">About</a><a href="blog.html">Guides</a></div>
+    <div class="footer-copy">Built for CS students</div>
+  </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

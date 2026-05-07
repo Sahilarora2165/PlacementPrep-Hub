@@ -3,51 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up | Campus Compass</title>
+  <title>Sign Up | PlacementPrep Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;800&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="site-header"><nav class="navbar container"><a class="logo" href="index.html"><span class="logo-mark">C</span> Campus Compass</a><button class="hamburger" id="hamburger" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button><div class="nav-links" id="navLinks"></div></nav></header>
-  <main class="auth-shell cinematic-auth">
-    <section class="auth-panel auth-panel-wide">
-    <aside class="auth-copy">
-      <p class="eyebrow">Join the network</p>
-      <h1>Build a useful campus profile.</h1>
-      <p class="lead">Your bio and area help readers understand why your guides are relevant.</p>
-    </aside>
-    <form class="form-card narrow" id="signupForm" novalidate>
-      <p class="eyebrow">Start writing</p>
-      <h1>Sign up</h1>
-      <div class="field"><label for="fullName">Full Name</label><input id="fullName" type="text"></div>
-      <div class="field"><label for="email">Email</label><input id="email" type="email"></div>
-      <div class="field"><label for="bio">Short Bio</label><input id="bio" type="text" placeholder="Example: CSE student sharing placement notes"></div>
+
+<header class="site-header">
+  <nav class="navbar container">
+    <a class="logo" href="index.html"><span class="logo-mark">PP</span> PlacementPrep</a>
+    <button class="hamburger" id="hamburger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+</header>
+
+<main class="auth-shell">
+  <div class="form-card" style="max-width:520px">
+    <div style="margin-bottom:24px">
+      <span class="eyebrow" style="margin-bottom:12px;display:inline-block">Join the community</span>
+      <h2>Create your account</h2>
+      <p class="lead">Share what worked in your placements. Help the next batch start smarter.</p>
+    </div>
+    <form id="signupForm" novalidate>
+      <div class="field"><label>Full Name</label><input id="fullName" type="text" placeholder="Rohan Gupta"></div>
+      <div class="field"><label>Email</label><input id="email" type="email" placeholder="you@college.edu"></div>
+      <div class="field"><label>Short Bio</label><input id="bio" type="text" placeholder="e.g. CSE student, placed at TCS via campus drive"></div>
       <div class="field">
-        <label for="expertise">Primary Area</label>
+        <label>Primary Area</label>
         <select id="expertise">
-          <option value="">Choose one</option>
-          <option>Placements</option>
-          <option>Projects</option>
-          <option>Exams</option>
-          <option>Campus Life</option>
-          <option>Events</option>
-          <option>Tech Tutorials</option>
-          <option>Travel</option>
-          <option>Opinion</option>
+          <option value="">Choose your focus area</option>
+          <option>DSA & Coding</option>
+          <option>Resume & Profile</option>
+          <option>System Design</option>
+          <option>Core Subjects</option>
+          <option>Interview Prep</option>
+          <option>Internships</option>
+          <option>CGPA & Academics</option>
+          <option>Off-Campus</option>
         </select>
       </div>
-      <div class="field"><label for="password">Password</label><input id="password" type="password"></div>
-      <div class="field"><label for="confirmPassword">Confirm Password</label><input id="confirmPassword" type="password"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field"><label>Password</label><input id="password" type="password" placeholder="6+ characters"></div>
+        <div class="field"><label>Confirm Password</label><input id="confirmPassword" type="password" placeholder="Repeat password"></div>
+      </div>
       <p class="error" id="signupError"></p>
       <p class="success-message" id="signupSuccess"></p>
-      <button class="btn btn-primary" type="submit">Create Account</button>
-      <p style="margin-top:18px;">Already registered? <a class="category-pill" href="login.html">Login</a></p>
+      <button class="btn btn-primary" type="submit" style="width:100%;margin-top:8px">Create Account <i class="fa-solid fa-arrow-right"></i></button>
     </form>
-    </section>
-  </main>
-  <script src="js/main.js"></script>
+    <p style="text-align:center;margin-top:20px;color:var(--muted);font-size:0.9rem">Already have an account? <a href="login.html" style="color:var(--accent);text-decoration:underline">Login</a></p>
+  </div>
+</main>
+
+<div class="toast" id="globalToast"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
