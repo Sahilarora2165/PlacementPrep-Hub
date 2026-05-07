@@ -157,6 +157,86 @@ const seedPosts = [
     date: "Apr 27, 2026",
     likes: 0,
     status: "published"
+  },
+  {
+    id: "seed-4",
+    createdAt: 1714780800000,
+    title: "System design prep for freshers: APIs, scaling, and trade-offs",
+    category: "System Design",
+    coverImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80",
+    content: "Most fresher interviews do not need distributed systems depth, but you should explain a clear high-level design. Start with requirements, define core entities, then draw API endpoints and basic data flow.\n\nPractice common prompts like URL shortener, chat app, and feed service. Speak in trade-offs: SQL vs NoSQL, cache placement, pagination style, and eventual consistency. Structured thinking matters more than perfect architecture.",
+    excerpt: "A fresher-friendly way to answer system design rounds with confidence.",
+    author: "System Notes",
+    authorEmail: "system@lumen.test",
+    authorBio: "Breaks system design interviews into practical building blocks.",
+    expertise: "System Design",
+    date: "May 4, 2026",
+    likes: 0,
+    status: "published"
+  },
+  {
+    id: "seed-5",
+    createdAt: 1715385600000,
+    title: "Internship hunt playbook: referrals, cold emails, and follow-ups",
+    category: "Internships",
+    coverImage: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80",
+    content: "Internship applications work best when tracked like a pipeline. Keep one spreadsheet with role link, deadline, status, recruiter contact, and follow-up date.\n\nUse concise cold emails with one line on your project impact. Add your resume and GitHub link, then follow up politely after 5 to 7 days. A consistent outreach process usually outperforms one-time bulk applying.",
+    excerpt: "A simple process to improve internship response rates.",
+    author: "Career Desk",
+    authorEmail: "career@lumen.test",
+    authorBio: "Curates practical strategies for internship and early-career growth.",
+    expertise: "Internships",
+    date: "May 11, 2026",
+    likes: 0,
+    status: "published"
+  },
+  {
+    id: "seed-6",
+    createdAt: 1715990400000,
+    title: "System design diagrams that interviewers can follow quickly",
+    category: "System Design",
+    coverImage: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
+    content: "Messy diagrams create confusion even if your ideas are right. Draw in layers: client, gateway, service, storage, and async workers. Label each arrow with request type and data movement.\n\nKeep your narration synchronized with the drawing. Mention bottlenecks and show where caching, queueing, or sharding can be introduced as load grows. Clarity and sequencing are scoring factors in many rounds.",
+    excerpt: "How to draw and explain clean architecture diagrams in interviews.",
+    author: "Architecture Lab",
+    authorEmail: "architecture@lumen.test",
+    authorBio: "Shares visual-first methods for design interviews.",
+    expertise: "System Design",
+    date: "May 18, 2026",
+    likes: 0,
+    status: "published"
+  },
+  {
+    id: "seed-7",
+    createdAt: 1716595200000,
+    title: "Internship interview prep in 10 days: a realistic schedule",
+    category: "Internships",
+    coverImage: "https://images.unsplash.com/photo-1484417894907-623942c8ee29?auto=format&fit=crop&w=1200&q=80",
+    content: "With limited time, prioritize high-yield topics. Spend days 1 to 4 on core DSA patterns, days 5 to 7 on project storytelling and resume walkthrough, and days 8 to 10 on mocks and company-specific prep.\n\nCreate a daily checklist with one coding problem set, one core concept revision, and one mock question round. The objective is confidence under time pressure, not perfect coverage.",
+    excerpt: "A practical 10-day prep plan for internship interviews.",
+    author: "Internship Circle",
+    authorEmail: "internships@lumen.test",
+    authorBio: "Builds structured short-term plans for internship season.",
+    expertise: "Internships",
+    date: "May 25, 2026",
+    likes: 0,
+    status: "published"
+  },
+  {
+    id: "seed-8",
+    createdAt: 1717200000000,
+    title: "Core CS revision sprint: DBMS, OS, and CN essentials",
+    category: "Core Subjects",
+    coverImage: "https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80",
+    content: "Core subject rounds are about fundamentals and communication. Start with DBMS normalization, indexing, transactions, and joins. Then revise OS process/thread scheduling, deadlocks, and memory management.\n\nFor computer networks, focus on TCP vs UDP, HTTP lifecycle, DNS, and common troubleshooting scenarios. Prepare concise definitions and one practical example for each concept so answers sound grounded.",
+    excerpt: "A focused revision guide for core CS interview rounds.",
+    author: "Core CS Team",
+    authorEmail: "corecs@lumen.test",
+    authorBio: "Summarizes interview-critical topics from core CS subjects.",
+    expertise: "Core Subjects",
+    date: "Jun 1, 2026",
+    likes: 0,
+    status: "published"
   }
 ];
 
@@ -207,7 +287,11 @@ function getStoredPosts() {
 }
 
 function getAllPosts() {
-  return seedPosts.concat(getStoredPosts()).filter(p => (p.status || "published") === "published");
+  const deletedSeedPostIds = BlogStore.get("deletedSeedPostIds", []).map(String);
+  return seedPosts
+    .concat(getStoredPosts())
+    .filter(p => (p.status || "published") === "published")
+    .filter(p => !(seedPosts.some(sp => String(sp.id) === String(p.id)) && deletedSeedPostIds.includes(String(p.id))));
 }
 
 function normalizeRole(role) {
@@ -1297,8 +1381,17 @@ function initEventDelegation() {
       return;
     }
     if (!confirm("Delete this post?")) return;
-    const posts = BlogStore.get("posts", []).filter(p => String(p.id) !== String(id));
-    BlogStore.set("posts", posts);
+    const isSeedPost = seedPosts.some(p => String(p.id) === String(id));
+    if (isSeedPost) {
+      const deletedSeedPostIds = BlogStore.get("deletedSeedPostIds", []).map(String);
+      if (!deletedSeedPostIds.includes(String(id))) {
+        deletedSeedPostIds.push(String(id));
+        BlogStore.set("deletedSeedPostIds", deletedSeedPostIds);
+      }
+    } else {
+      const posts = BlogStore.get("posts", []).filter(p => String(p.id) !== String(id));
+      BlogStore.set("posts", posts);
+    }
     const likesByPost = BlogStore.get("likesByPost", {});
     if (likesByPost && typeof likesByPost === "object") {
       delete likesByPost[id];

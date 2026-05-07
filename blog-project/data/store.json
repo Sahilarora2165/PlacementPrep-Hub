@@ -10,10 +10,10 @@
     "seed-3"
   ],
   "analytics:seed-1": {
-    "views": 2
+    "views": 3
   },
   "analytics:seed-2": {
-    "views": 1
+    "views": 3
   },
   "users": [
     {
@@ -21,27 +21,32 @@
       "email": "sahil@gmail.com",
       "password": "pass123",
       "bio": "sdc",
-      "expertise": "Internships"
+      "expertise": "Internships",
+      "role": "admin"
+    },
+    {
+      "fullName": "Admin",
+      "email": "admin@placementprep.local",
+      "password": "admin123",
+      "bio": "Platform administrator",
+      "expertise": "Operations",
+      "role": "admin"
     }
   ],
-  "loggedInUser": {
-    "fullName": "Sahil Arora",
-    "email": "sahil@gmail.com",
-    "bio": "sdc",
-    "expertise": "Internships"
-  },
   "savedPosts:sahil@gmail.com": [
     "seed-2",
     "seed-1"
   ],
-  "comments:seed-1": [
-    {
-      "id": "1778087338636",
-      "name": "Sahil Arora",
-      "email": "sahil@gmail.com",
-      "comment": "jkbj",
-      "date": "May 6, 2026",
-      "replies": []
-    }
+  "loggedInUser": {
+    "fullName": "Admin",
+    "email": "admin@placementprep.local",
+    "bio": "Platform administrator",
+    "expertise": "Operations",
+    "role": "admin"
+  },
+  "posts": [],
+  "likeCountFallback": {},
+  "deletedSeedPostIds": [
+    "seed-1"
   ]
 }
