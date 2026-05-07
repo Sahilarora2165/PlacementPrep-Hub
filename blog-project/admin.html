@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | PlacementPrep Hub</title>
+  <title>Admin Dashboard | PlacementPrep Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -26,9 +26,9 @@
       <div class="writer-identity">
         <div class="avatar-orb" id="dashboardAvatar">A</div>
         <div>
-          <span class="eyebrow" style="margin-bottom:6px;display:inline-block" id="dashboardRoleLabel">Writer Console</span>
+          <span class="eyebrow" style="margin-bottom:6px;display:inline-block" id="dashboardRoleLabel">Admin Console</span>
           <h1 id="dashboardName" style="margin-bottom:4px"></h1>
-          <p style="color:var(--muted);font-size:0.85rem" id="dashboardRoleDescription">Manage your guides and reading list</p>
+          <p style="color:var(--muted);font-size:0.85rem" id="dashboardRoleDescription">Manage users, moderation, reports, and platform inbox</p>
         </div>
       </div>
       <div class="dashboard-actions">
@@ -38,35 +38,24 @@
     </div>
 
     <div class="dashboard-metrics">
-      <div class="metric-card"><span>Published</span><strong id="postCount">0</strong><small>Your guides</small></div>
-      <div class="metric-card"><span>Saved</span><strong id="savedCount">0</strong><small>Reading list</small></div>
+      <div class="metric-card"><span>Published</span><strong id="postCount">0</strong><small>All guides</small></div>
+      <div class="metric-card"><span>Users</span><strong id="savedCount">0</strong><small>Registered</small></div>
       <div class="metric-card"><span>Inbox</span><strong id="inboxCount">0</strong><small>Messages</small></div>
-      <div class="metric-card"><span>Reports</span><strong id="reportCount">0</strong><small>Flagged posts</small></div>
+      <div class="metric-card"><span>Reports</span><strong id="reportCount">0</strong><small>Pending</small></div>
     </div>
 
     <div class="console-grid">
       <aside class="console-sidebar">
         <button class="console-tab active" data-dashboard-tab="published"><i class="fa-solid fa-newspaper"></i> Published</button>
-        <button class="console-tab" data-dashboard-tab="draft"><i class="fa-solid fa-pen"></i> Draft</button>
-        <button class="console-tab" data-dashboard-tab="saved"><i class="fa-solid fa-bookmark"></i> Saved</button>
-        <button class="console-tab admin-only" data-dashboard-tab="users"><i class="fa-solid fa-users"></i> Users</button>
-        <button class="console-tab admin-only" data-dashboard-tab="inbox"><i class="fa-solid fa-inbox"></i> Inbox</button>
-        <button class="console-tab admin-only" data-dashboard-tab="reports"><i class="fa-solid fa-flag"></i> Reports</button>
+        <button class="console-tab" data-dashboard-tab="users"><i class="fa-solid fa-users"></i> Users</button>
+        <button class="console-tab" data-dashboard-tab="inbox"><i class="fa-solid fa-inbox"></i> Inbox</button>
+        <button class="console-tab" data-dashboard-tab="reports"><i class="fa-solid fa-flag"></i> Reports</button>
       </aside>
 
       <div class="console-content">
         <div class="console-panel active" data-dashboard-panel="published">
-          <div class="console-heading"><h2>Your Published Guides</h2><a class="btn btn-secondary btn-sm" href="create.html">Write another</a></div>
+          <div class="console-heading"><h2>All Published Guides</h2></div>
           <div id="dashboardList"></div>
-        </div>
-        <div class="console-panel" data-dashboard-panel="draft">
-          <div class="console-heading"><h2>Current Draft</h2></div>
-          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Your in-progress guide autosaves in the browser</p>
-          <div id="draftList"></div>
-        </div>
-        <div class="console-panel" data-dashboard-panel="saved">
-          <div class="console-heading"><h2>Saved for Later</h2><a class="btn btn-secondary btn-sm" href="blog.html">Browse more</a></div>
-          <div id="savedList"></div>
         </div>
         <div class="console-panel admin-only" data-dashboard-panel="users">
           <div class="console-heading"><h2>User Management</h2></div>
@@ -75,12 +64,10 @@
         </div>
         <div class="console-panel admin-only" data-dashboard-panel="inbox">
           <div class="console-heading"><h2>Contact Inbox</h2></div>
-          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Messages submitted through the contact form</p>
           <div id="inboxList"></div>
         </div>
         <div class="console-panel admin-only" data-dashboard-panel="reports">
           <div class="console-heading"><h2>Flagged Reports</h2></div>
-          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Posts reported by users for review</p>
           <div id="reportsList"></div>
         </div>
       </div>

@@ -210,8 +210,25 @@ function getAllPosts() {
   return seedPosts.concat(getStoredPosts()).filter(p => (p.status || "published") === "published");
 }
 
-function getLoggedInUser() { return BlogStore.get("loggedInUser", null); }
-function getUserRecord(email) { return BlogStore.get("users", []).find(u => u.email === email) || null; }
+function normalizeRole(role) {
+  return String(role || "").toLowerCase() === "admin" ? "admin" : "user";
+}
+
+function getLoggedInUser() {
+  const user = BlogStore.get("loggedInUser", null);
+  if (!user) return null;
+  return { ...user, role: normalizeRole(user.role) };
+}
+
+function getUserRecord(email) {
+  const found = BlogStore.get("users", []).find(u => u.email === email) || null;
+  if (!found) return null;
+  return { ...found, role: normalizeRole(found.role) };
+}
+
+function isAdminUser(user) {
+  return Boolean(user) && normalizeRole(user.role) === "admin";
+}
 
 function getOrCreateGuestId() {
   const existing = BlogStore.get("guestId", "");
@@ -378,7 +395,7 @@ function initNav() {
 
   const user = getLoggedInUser();
   const authLinks = user
-    ? `<a class="nav-link" href="dashboard.html">Dashboard</a><a class="nav-link" href="create.html">Write</a><a class="nav-link" href="#" id="logoutLink">Logout</a>`
+    ? `<a class="nav-link" href="${isAdminUser(user) ? "admin.html" : "dashboard.html"}">${isAdminUser(user) ? "Admin" : "Dashboard"}</a><a class="nav-link" href="create.html">Write</a><a class="nav-link" href="#" id="logoutLink">Logout</a>`
     : `<a class="nav-link" href="login.html">Login</a><a class="nav-link" href="signup.html">Sign Up</a>`;
 
   nav.innerHTML = `
@@ -746,10 +763,13 @@ function initDashboard() {
   if (!panel) return;
   const user = requireAuth();
   if (!user) return;
+  const adminMode = isAdminUser(user);
 
   function render() {
     const name = document.getElementById("dashboardName");
     const avatar = document.getElementById("dashboardAvatar");
+    const roleLabel = document.getElementById("dashboardRoleLabel");
+    const roleDescription = document.getElementById("dashboardRoleDescription");
     const count = document.getElementById("postCount");
     const savedCount = document.getElementById("savedCount");
     const inboxCount = document.getElementById("inboxCount");
@@ -759,34 +779,47 @@ function initDashboard() {
     const draftList = document.getElementById("draftList");
     const inboxList = document.getElementById("inboxList");
     const reportsList = document.getElementById("reportsList");
+    const usersList = document.getElementById("usersList");
 
     const posts = getStoredPosts().filter(p => p.authorEmail === user.email);
+    const allPosts = getAllPosts();
+    const managedPosts = adminMode ? allPosts : posts;
     const saved = getSavedPosts();
     const draft = getDraftForUser(user.email);
     const messages = BlogStore.get("contactMessages", []);
     const reports = BlogStore.get("reports", []);
+    const users = BlogStore.get("users", []).map(u => ({ ...u, role: normalizeRole(u.role) }));
+    const nonCurrentUsers = users.filter(u => u.email !== user.email);
 
     if (name) name.textContent = user.fullName;
     if (avatar) avatar.textContent = user.fullName.trim().charAt(0).toUpperCase();
-    if (count) count.textContent = posts.length;
-    if (savedCount) savedCount.textContent = saved.length;
-    if (inboxCount) inboxCount.textContent = messages.length;
-    if (reportCount) reportCount.textContent = reports.length;
+    if (roleLabel) roleLabel.textContent = adminMode ? "Admin Console" : "Writer Console";
+    if (roleDescription) roleDescription.textContent = adminMode
+      ? "Manage users, content moderation, reports, and inbox"
+      : "Manage your guides and reading list";
+    if (count) count.textContent = managedPosts.length;
+    if (savedCount) savedCount.textContent = adminMode ? users.length : saved.length;
+    if (inboxCount) inboxCount.textContent = adminMode ? messages.length : 0;
+    if (reportCount) reportCount.textContent = adminMode ? reports.length : 0;
+
+    document.querySelectorAll(".admin-only").forEach(el => {
+      el.style.display = adminMode ? "" : "none";
+    });
 
     if (list) {
-      list.innerHTML = posts.length
-        ? posts.map(p => `
+      list.innerHTML = managedPosts.length
+        ? managedPosts.map(p => `
           <article class="publication-row">
             <img src="${escapeHTML(p.coverImage)}" alt="${escapeHTML(p.title)}" loading="lazy">
             <div class="publication-main">
               <span class="category-pill">${escapeHTML(p.category)}</span>
               <h3>${escapeHTML(p.title)}</h3>
               <p>${escapeHTML(p.excerpt || makeExcerpt(p.content))}</p>
-              <div class="meta"><span>${escapeHTML(p.date)}</span><span>${calculateReadTime(p.content)} min read</span><span>${getLikeCount(p)} likes</span><span>${getCommentCount(p.id)} comments</span></div>
+              <div class="meta"><span>${escapeHTML(p.date)}</span><span>${calculateReadTime(p.content)} min read</span><span>${getLikeCount(p)} likes</span><span>${getCommentCount(p.id)} comments</span><span>By ${escapeHTML(p.author)}</span></div>
             </div>
             <div class="publication-actions">
               <a class="btn btn-secondary btn-sm" href="post.html?id=${encodeURIComponent(p.id)}"><i class="fa-solid fa-eye"></i> View</a>
-              <button class="btn btn-secondary btn-sm delete-post" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>
+              <button class="btn btn-secondary btn-sm delete-post" data-id="${p.id}" data-author-email="${escapeHTML(p.authorEmail)}"><i class="fa-solid fa-trash"></i></button>
             </div>
           </article>
         `).join("")
@@ -806,18 +839,46 @@ function initDashboard() {
     }
 
     if (inboxList) {
-      inboxList.innerHTML = messages.length
-        ? messages.slice().reverse().map(m => `<article class="message-card"><div><strong>${escapeHTML(m.name)}</strong><p>${escapeHTML(m.message)}</p></div><div class="meta"><span>${escapeHTML(m.email)}</span><span>${escapeHTML(m.date)}</span></div></article>`).join("")
-        : `<div class="empty-state"><i class="fa-regular fa-envelope"></i><h3>Inbox is clear</h3><p>Messages from the contact form will collect here.</p></div>`;
+      inboxList.innerHTML = adminMode
+        ? (messages.length
+          ? messages.slice().reverse().map(m => `<article class="message-card"><div><strong>${escapeHTML(m.name)}</strong><p>${escapeHTML(m.message)}</p></div><div class="meta"><span>${escapeHTML(m.email)}</span><span>${escapeHTML(m.date)}</span></div></article>`).join("")
+          : `<div class="empty-state"><i class="fa-regular fa-envelope"></i><h3>Inbox is clear</h3><p>Messages from the contact form will collect here.</p></div>`)
+        : `<div class="empty-state"><i class="fa-regular fa-lock"></i><h3>Admin only</h3><p>Only admins can access contact inbox messages.</p></div>`;
     }
 
     if (reportsList) {
-      reportsList.innerHTML = reports.length
-        ? reports.slice().reverse().map(r => {
-          const rp = getAllPosts().find(p => String(p.id) === String(r.postId));
-          return `<article class="message-card report-card"><div><strong>${escapeHTML(rp ? rp.title : "Deleted post")}</strong><p>${escapeHTML(r.note || "No extra note added.")}</p></div><div class="meta"><span>${escapeHTML(r.reason)}</span><span>${escapeHTML(r.date)}</span></div></article>`;
-        }).join("")
-        : `<div class="empty-state"><i class="fa-regular fa-flag"></i><h3>No reports</h3><p>Flagged guide reports will appear here for review.</p></div>`;
+      reportsList.innerHTML = adminMode
+        ? (reports.length
+          ? reports.slice().reverse().map(r => {
+            const rp = getAllPosts().find(p => String(p.id) === String(r.postId));
+            return `<article class="message-card report-card"><div><strong>${escapeHTML(rp ? rp.title : "Deleted post")}</strong><p>${escapeHTML(r.note || "No extra note added.")}</p></div><div class="meta"><span>${escapeHTML(r.reason)}</span><span>${escapeHTML(r.date)}</span></div><div class="card-actions"><button class="btn btn-secondary btn-sm resolve-report" data-id="${escapeHTML(r.id)}"><i class="fa-solid fa-check"></i> Resolve</button>${rp ? `<button class="btn btn-secondary btn-sm delete-post" data-id="${escapeHTML(rp.id)}" data-author-email="${escapeHTML(rp.authorEmail)}"><i class="fa-solid fa-trash"></i> Remove post</button>` : ""}</div></article>`;
+          }).join("")
+          : `<div class="empty-state"><i class="fa-regular fa-flag"></i><h3>No reports</h3><p>Flagged guide reports will appear here for review.</p></div>`)
+        : `<div class="empty-state"><i class="fa-regular fa-lock"></i><h3>Admin only</h3><p>Only admins can review and resolve reported posts.</p></div>`;
+    }
+
+    if (usersList) {
+      usersList.innerHTML = adminMode
+        ? (nonCurrentUsers.length
+          ? nonCurrentUsers.map(u => `
+            <article class="message-card">
+              <div>
+                <strong>${escapeHTML(u.fullName)}</strong>
+                <p>${escapeHTML(u.email)}</p>
+              </div>
+              <div class="meta">
+                <span>${escapeHTML(u.expertise || "General")}</span>
+                <span class="category-pill">${escapeHTML(normalizeRole(u.role))}</span>
+              </div>
+              <div class="card-actions">
+                <button class="btn btn-secondary btn-sm toggle-user-role" data-email="${escapeHTML(u.email)}" data-role="${escapeHTML(normalizeRole(u.role))}">
+                  <i class="fa-solid fa-user-shield"></i> ${normalizeRole(u.role) === "admin" ? "Set as User" : "Promote to Admin"}
+                </button>
+              </div>
+            </article>
+          `).join("")
+          : `<div class="empty-state"><i class="fa-regular fa-user"></i><h3>No users available</h3><p>Create user accounts to manage roles.</p></div>`)
+        : "";
     }
   }
 
@@ -935,6 +996,43 @@ function requireAuth() {
   return user;
 }
 
+function guardAdminPage() {
+  const page = location.pathname.split("/").pop() || "";
+  if (page !== "admin.html") return;
+  const user = getLoggedInUser();
+  if (!user) {
+    BlogStore.set("authRedirect", "admin.html");
+    window.location.href = "login.html";
+    return;
+  }
+  if (!isAdminUser(user)) {
+    window.location.href = "dashboard.html";
+  }
+}
+
+function ensureDefaultAdminAccount() {
+  const users = BlogStore.get("users", []);
+  let changed = false;
+  const normalizedUsers = users.map(u => {
+    const nextRole = normalizeRole(u.role);
+    if (u.role !== nextRole) changed = true;
+    return { ...u, role: nextRole };
+  });
+  const hasAdmin = normalizedUsers.some(u => normalizeRole(u.role) === "admin");
+  if (!hasAdmin) {
+    normalizedUsers.push({
+      fullName: "Admin",
+      email: "admin@placementprep.local",
+      password: "admin123",
+      bio: "Platform administrator",
+      expertise: "Operations",
+      role: "admin"
+    });
+    changed = true;
+  }
+  if (changed) BlogStore.set("users", normalizedUsers);
+}
+
 function initSignup() {
   const form = document.getElementById("signupForm");
   if (!form) return;
@@ -955,7 +1053,7 @@ function initSignup() {
 
     const users = BlogStore.get("users", []);
     if (users.some(u => u.email.toLowerCase() === email)) { error.textContent = "An account with this email already exists."; return; }
-    users.push({ fullName, email, password, bio, expertise });
+    users.push({ fullName, email, password, bio, expertise, role: "user" });
     BlogStore.set("users", users);
     error.textContent = "";
 
@@ -984,7 +1082,13 @@ function initLogin() {
       if (formCard) { formCard.classList.add("shake"); setTimeout(() => formCard.classList.remove("shake"), 600); }
       return;
     }
-    BlogStore.set("loggedInUser", { fullName: user.fullName, email: user.email, bio: user.bio || "", expertise: user.expertise || "" });
+    BlogStore.set("loggedInUser", {
+      fullName: user.fullName,
+      email: user.email,
+      bio: user.bio || "",
+      expertise: user.expertise || "",
+      role: normalizeRole(user.role)
+    });
     const redirect = BlogStore.get("authRedirect", "index.html");
     BlogStore.remove("authRedirect");
     window.location.href = redirect || "index.html";
@@ -1183,7 +1287,15 @@ function initEventDelegation() {
   document.addEventListener("click", e => {
     const btn = e.target.closest(".delete-post");
     if (!btn) return;
+    const currentUser = getLoggedInUser();
+    if (!currentUser) return;
     const id = btn.getAttribute("data-id");
+    const authorEmail = btn.getAttribute("data-author-email") || "";
+    const canDelete = isAdminUser(currentUser) || authorEmail === currentUser.email;
+    if (!canDelete) {
+      showToast("You do not have permission to delete this post.", "error");
+      return;
+    }
     if (!confirm("Delete this post?")) return;
     const posts = BlogStore.get("posts", []).filter(p => String(p.id) !== String(id));
     BlogStore.set("posts", posts);
@@ -1198,6 +1310,47 @@ function initEventDelegation() {
       BlogStore.set("likeCountFallback", fallback);
     }
     BlogStore.remove("comments:" + id);
+    if (window.renderDashboard) window.renderDashboard();
+  });
+
+  // Admin: resolve report
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".resolve-report");
+    if (!btn) return;
+    const currentUser = getLoggedInUser();
+    if (!isAdminUser(currentUser)) {
+      showToast("Only admins can resolve reports.", "error");
+      return;
+    }
+    const reportId = btn.getAttribute("data-id");
+    const reports = BlogStore.get("reports", []).filter(r => String(r.id) !== String(reportId));
+    BlogStore.set("reports", reports);
+    showToast("Report resolved.");
+    if (window.renderDashboard) window.renderDashboard();
+  });
+
+  // Admin: toggle user role
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".toggle-user-role");
+    if (!btn) return;
+    const currentUser = getLoggedInUser();
+    if (!isAdminUser(currentUser)) {
+      showToast("Only admins can change roles.", "error");
+      return;
+    }
+    const email = String(btn.getAttribute("data-email") || "").toLowerCase();
+    if (!email) return;
+    const users = BlogStore.get("users", []);
+    const nextUsers = users.map(u => {
+      if (String(u.email).toLowerCase() !== email) return { ...u, role: normalizeRole(u.role) };
+      const nextRole = normalizeRole(u.role) === "admin" ? "user" : "admin";
+      return { ...u, role: nextRole };
+    });
+    BlogStore.set("users", nextUsers);
+    if (currentUser && String(currentUser.email).toLowerCase() === email) {
+      BlogStore.set("loggedInUser", { ...currentUser, role: normalizeRole(currentUser.role) === "admin" ? "user" : "admin" });
+    }
+    showToast("User role updated.");
     if (window.renderDashboard) window.renderDashboard();
   });
 }
@@ -1321,6 +1474,8 @@ function initSmoothExperience() {
 /* ===== Init ===== */
 document.addEventListener("DOMContentLoaded", async () => {
   await SyncStoreAPI.hydrateLocalFromServer();
+  ensureDefaultAdminAccount();
+  guardAdminPage();
   initNav();
   initHeroTyping();
   initHomeLatest();
