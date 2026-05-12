@@ -1,5 +1,7 @@
 /* =========================================================
-   PlacementPrep Hub - Vanilla JavaScript (No dependencies)
+   PlacementPrep Hub - Vanilla JavaScript
+   localStorage stays as client-side cache.
+   SyncStoreAPI replaced with typed REST API client.
    ========================================================= */
 
 const BlogStore = {
@@ -19,93 +21,153 @@ const BlogStore = {
   }
 };
 
-/* ===== Lightweight backend sync (same JS stack) ===== */
-const SyncStoreAPI = {
-  enabled: /^https?:/i.test(window.location.protocol),
-  getLocalSnapshot() {
-    const snapshot = {};
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i);
-      if (!key) continue;
-      const raw = localStorage.getItem(key);
-      if (raw == null) continue;
-      try { snapshot[key] = JSON.parse(raw); }
-      catch (e) { console.warn("Skipping non-JSON local key:", key, e); }
-    }
-    return snapshot;
-  },
-  async mergeLocalIntoServer(data) {
-    if (!this.enabled) return;
-    try {
-      await fetch("/api/store", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data })
-      });
-    } catch (e) {
-      console.warn("Server merge sync skipped:", e);
-    }
-  },
-  async hydrateLocalFromServer() {
-    if (!this.enabled) return;
-    try {
-      const response = await fetch("/api/store", { headers: { "Accept": "application/json" } });
-      if (!response.ok) return;
-      const payload = await response.json();
-      const serverData = payload && payload.data && typeof payload.data === "object" ? payload.data : {};
-      const localData = this.getLocalSnapshot();
+/* ===== REST API client ===== */
+const API = {
+  _enabled: /^https?:/i.test(window.location.protocol),
 
-      // One-time reconciliation:
-      // - Pull server data into local storage
-      // - Push local-only keys to server so existing browser data is not lost
-      Object.keys(serverData).forEach((key) => {
-        try { localStorage.setItem(key, JSON.stringify(serverData[key])); }
-        catch (e) { console.error("localStorage hydrate:", key, e); }
-      });
+  async _req(method, path, body) {
+    if (!this._enabled) return null;
+    try {
+      const opts = {
+        method,
+        headers: { "Content-Type": "application/json" }
+      };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      const res = await fetch(path, opts);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      console.warn(`API ${method} ${path} failed:`, e);
+      return null;
+    }
+  },
 
-      const localOnly = {};
-      Object.keys(localData).forEach((key) => {
-        if (!(key in serverData)) localOnly[key] = localData[key];
-      });
-      if (Object.keys(localOnly).length > 0) await this.mergeLocalIntoServer(localOnly);
-    } catch (e) {
-      console.warn("Server hydrate skipped:", e);
-    }
+  // ── Users ────────────────────────────────────────────────
+  async register(user)  { return this._req("POST", "/api/users/register", user); },
+  async login(email, password) { return this._req("POST", "/api/users/login", { email, password }); },
+  async listUsers()     { return this._req("GET",  "/api/users"); },
+  async updateRole(email, role) { return this._req("PUT", `/api/users/${encodeURIComponent(email)}/role`, { role }); },
+
+  // ── Posts ────────────────────────────────────────────────
+  async getPosts()      { return this._req("GET",  "/api/posts"); },
+  async getPost(id)     { return this._req("GET",  `/api/posts/${encodeURIComponent(id)}`); },
+  async createPost(post){ return this._req("POST", "/api/posts", post); },
+  async deletePost(id)  { return this._req("DELETE", `/api/posts/${encodeURIComponent(id)}`); },
+
+  // ── Comments ─────────────────────────────────────────────
+  async getComments(postId)            { return this._req("GET",  `/api/comments/${encodeURIComponent(postId)}`); },
+  async addComment(postId, comment)    { return this._req("POST", `/api/comments/${encodeURIComponent(postId)}`, comment); },
+  async addReply(commentId, reply)     { return this._req("POST", `/api/comments/${encodeURIComponent(commentId)}/replies`, reply); },
+
+  // ── Likes ────────────────────────────────────────────────
+  async toggleLike(postId, actorId)   { return this._req("POST", "/api/likes", { postId, actorId }); },
+  async getLikes(postId)              { return this._req("GET",  `/api/likes/${encodeURIComponent(postId)}`); },
+
+  // ── Saved ────────────────────────────────────────────────
+  async toggleSaved(userKey, postId)  { return this._req("POST", "/api/saved", { userKey, postId }); },
+  async getSaved(userKey)             { return this._req("GET",  `/api/saved/${encodeURIComponent(userKey)}`); },
+
+  // ── Reports ──────────────────────────────────────────────
+  async addReport(report)             { return this._req("POST",   "/api/reports", report); },
+  async getReports()                  { return this._req("GET",    "/api/reports"); },
+  async deleteReport(id)              { return this._req("DELETE", `/api/reports/${encodeURIComponent(id)}`); },
+
+  // ── Contact ──────────────────────────────────────────────
+  async addContact(msg)               { return this._req("POST", "/api/contact", msg); },
+  async getContact()                  { return this._req("GET",  "/api/contact"); },
+
+  // ── Analytics ────────────────────────────────────────────
+  async trackView(postId)             { return this._req("POST", `/api/analytics/${encodeURIComponent(postId)}`); },
+  async getAnalytics(postId)          { return this._req("GET",  `/api/analytics/${encodeURIComponent(postId)}`); },
+
+  // ── Drafts ───────────────────────────────────────────────
+  async saveDraft(email, draft)       { return this._req("PUT", `/api/drafts/${encodeURIComponent(email)}`, draft); },
+  async getDraft(email)               { return this._req("GET", `/api/drafts/${encodeURIComponent(email)}`); },
+
+  // ── Followers ────────────────────────────────────────────
+  async toggleFollow(authorEmail, followerEmail) {
+    return this._req("POST", "/api/followers", { authorEmail, followerEmail });
   },
-  async setKey(key, value) {
-    if (!this.enabled) return;
+  async getFollowers(email)           { return this._req("GET", `/api/followers/${encodeURIComponent(email)}`); },
+
+  // ── Hydrate localStorage from MySQL on page load ─────────
+  async hydrateFromServer() {
+    if (!this._enabled) return;
     try {
-      await fetch(`/api/store/${encodeURIComponent(key)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value })
-      });
+      // Posts
+      const postsRes = await this.getPosts();
+      if (postsRes && postsRes.posts) {
+        BlogStore.set("posts", postsRes.posts);
+      }
+
+      // Users
+      const usersRes = await this.listUsers();
+      if (usersRes && usersRes.users) {
+        BlogStore.set("users", usersRes.users);
+      }
+
+      // Reports
+      const reportsRes = await this.getReports();
+      if (reportsRes && reportsRes.reports) {
+        BlogStore.set("reports", reportsRes.reports);
+      }
+
+      // Contact messages
+      const contactRes = await this.getContact();
+      if (contactRes && contactRes.messages) {
+        BlogStore.set("contactMessages", contactRes.messages);
+      }
+
+      // For each post: likes, comments, analytics
+      const allPosts = (postsRes && postsRes.posts) ? postsRes.posts : [];
+      const seedIds = seedPosts.map(p => String(p.id));
+      const dbPostIds = allPosts.map(p => String(p.id));
+      const allPostIds = Array.from(new Set([...seedIds, ...dbPostIds]));
+
+      const likesByPost = {};
+      await Promise.all(allPostIds.map(async postId => {
+        const [likesRes, commentsRes, analyticsRes] = await Promise.all([
+          this.getLikes(postId),
+          this.getComments(postId),
+          this.getAnalytics(postId)
+        ]);
+        if (likesRes && likesRes.actors) likesByPost[postId] = likesRes.actors;
+        if (commentsRes && commentsRes.comments) BlogStore.set(`comments:${postId}`, commentsRes.comments);
+        if (analyticsRes) BlogStore.set(`analytics:${postId}`, { views: analyticsRes.views || 0 });
+      }));
+      BlogStore.set("likesByPost", likesByPost);
+      BlogStore.set("likesMigrated_v2", true);
+
+      // Saved posts for current user
+      const loggedIn = BlogStore.get("loggedInUser", null);
+      if (loggedIn && loggedIn.email) {
+        const savedRes = await this.getSaved(loggedIn.email);
+        if (savedRes && savedRes.postIds) BlogStore.set(`savedPosts:${loggedIn.email}`, savedRes.postIds);
+
+        const draftRes = await this.getDraft(loggedIn.email);
+        if (draftRes && draftRes.draft) BlogStore.set(`draft:${loggedIn.email}`, draftRes.draft);
+
+        const followersReqs = await Promise.all(
+          [...new Set(allPostIds.map(id => {
+            const post = allPosts.find(p => String(p.id) === id) || seedPosts.find(p => String(p.id) === id);
+            return post ? post.authorEmail : null;
+          }).filter(Boolean))].map(async email => {
+            const fr = await this.getFollowers(email);
+            return { email, followers: (fr && fr.followers) ? fr.followers : [] };
+          })
+        );
+        followersReqs.forEach(({ email, followers }) => {
+          BlogStore.set(`followers:${email}`, followers);
+        });
+      } else {
+        // Guest saved posts
+        const savedRes = await this.getSaved("savedPosts:guest");
+        if (savedRes && savedRes.postIds) BlogStore.set("savedPosts:guest", savedRes.postIds);
+      }
     } catch (e) {
-      console.warn("Server sync set failed:", key, e);
-    }
-  },
-  async removeKey(key) {
-    if (!this.enabled) return;
-    try {
-      await fetch(`/api/store/${encodeURIComponent(key)}`, { method: "DELETE" });
-    } catch (e) {
-      console.warn("Server sync remove failed:", key, e);
+      console.warn("Hydration from server failed (offline?). Using local data.", e);
     }
   }
-};
-
-const _originalSet = BlogStore.set.bind(BlogStore);
-BlogStore.set = function(key, value) {
-  const ok = _originalSet(key, value);
-  // Fire-and-forget server persistence to keep current synchronous UI flow unchanged.
-  SyncStoreAPI.setKey(key, value);
-  return ok;
-};
-
-const _originalRemove = BlogStore.remove.bind(BlogStore);
-BlogStore.remove = function(key) {
-  _originalRemove(key);
-  SyncStoreAPI.removeKey(key);
 };
 
 /* ===== Seed Data ===== */
@@ -255,7 +317,6 @@ const placementCategories = [
 function showToast(message, kind = "success") {
   const toast = document.getElementById("globalToast");
   if (!toast) return;
-  // If jQuery is present, use it for smooth toast transitions.
   if (window.jQuery) {
     const $t = window.jQuery(toast);
     toast.style.borderColor = kind === "error" ? "rgba(255, 107, 107, 0.35)" : "rgba(31, 78, 216, 0.26)";
@@ -267,7 +328,6 @@ function showToast(message, kind = "success") {
     window.__toastTimer = setTimeout(() => { $t.fadeOut(180); }, 2600);
     return;
   }
-
   toast.style.display = "block";
   toast.style.borderColor = kind === "error" ? "rgba(255, 107, 107, 0.35)" : "rgba(31, 78, 216, 0.26)";
   toast.style.color = kind === "error" ? "#ff6b6b" : "var(--accent-2)";
@@ -338,16 +398,11 @@ function setLikesByPost(map) {
 }
 
 function migrateLegacyLikesIfNeeded() {
-  // Legacy keys used a global likedPosts array + postLikes numeric map (not per-user).
-  // We migrate once by converting the current browser's likedPosts into likesByPost entries
-  // attributed to the current actor (or guest id).
   if (BlogStore.get("likesMigrated_v2", false)) return;
-
   const legacyLiked = BlogStore.get("likedPosts", null);
   const legacyCounts = BlogStore.get("postLikes", null);
   const next = getLikesByPost();
   const actor = getLikeActorId();
-
   if (Array.isArray(legacyLiked)) {
     legacyLiked.map(String).forEach(postId => {
       const arr = Array.isArray(next[postId]) ? next[postId].map(String) : [];
@@ -355,9 +410,6 @@ function migrateLegacyLikesIfNeeded() {
       next[postId] = arr;
     });
   }
-
-  // If legacyCounts exists but likesByPost is empty for a post, keep the numeric count as a fallback.
-  // We store it separately so counts don't suddenly drop to 0 on migration.
   if (legacyCounts && typeof legacyCounts === "object") {
     const fallback = BlogStore.get("likeCountFallback", {});
     Object.keys(legacyCounts).forEach(pid => {
@@ -368,7 +420,6 @@ function migrateLegacyLikesIfNeeded() {
     });
     BlogStore.set("likeCountFallback", fallback);
   }
-
   setLikesByPost(next);
   BlogStore.set("likesMigrated_v2", true);
 }
@@ -384,12 +435,10 @@ function calculateReadTime(text) {
   const words = String(text || "").trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.ceil(words / 200));
 }
-
 function makeExcerpt(content) {
   const clean = String(content || "").trim();
   return clean.substring(0, 145) + (clean.length > 145 ? "..." : "");
 }
-
 function getWordCount(text) { return String(text || "").trim().split(/\s+/).filter(Boolean).length; }
 function getReadingLevel(text) {
   const w = getWordCount(text);
@@ -415,9 +464,16 @@ function isLikedByCurrentUser(postId) {
 }
 
 function getCommentCount(postId) { return BlogStore.get(`comments:${postId}`, []).length; }
+
 function getSavedKey() {
   const user = getLoggedInUser();
   return user ? `savedPosts:${user.email}` : "savedPosts:guest";
+}
+
+// The API saved key uses email directly for logged-in, or "savedPosts:guest" for guests
+function getApiSavedKey() {
+  const user = getLoggedInUser();
+  return user ? user.email : "savedPosts:guest";
 }
 
 function isSavedPost(id) { return BlogStore.get(getSavedKey(), []).map(String).includes(String(id)); }
@@ -431,11 +487,18 @@ function getTrendingPosts() {
 }
 
 function getDraftForUser(email) { return BlogStore.get(`draft:${email}`, null); }
-function followAuthor(email) { const u = getLoggedInUser(); if (!u) return; const f = BlogStore.get("followers:" + email, []); if (!f.includes(u.email)) { f.push(u.email); BlogStore.set("followers:" + email, f); } }
-function unfollowAuthor(email) { const u = getLoggedInUser(); if (!u) return; BlogStore.set("followers:" + email, BlogStore.get("followers:" + email, []).filter(e => e !== u.email)); }
+function followAuthor(email) { const u = getLoggedInUser(); if (!u) return; const f = BlogStore.get("followers:" + email, []); if (!f.includes(u.email)) { f.push(u.email); BlogStore.set("followers:" + email, f); } API.toggleFollow(email, u.email); }
+function unfollowAuthor(email) { const u = getLoggedInUser(); if (!u) return; BlogStore.set("followers:" + email, BlogStore.get("followers:" + email, []).filter(e => e !== u.email)); API.toggleFollow(email, u.email); }
 function isFollowingAuthor(email) { const u = getLoggedInUser(); if (!u) return false; return BlogStore.get("followers:" + email, []).includes(u.email); }
 function getFollowers(email) { return BlogStore.get("followers:" + email, []); }
-function trackPostView(postId) { const a = BlogStore.get("analytics:" + postId, { views: 0 }); a.views = (a.views || 0) + 1; BlogStore.set("analytics:" + postId, a); }
+
+function trackPostView(postId) {
+  const a = BlogStore.get("analytics:" + postId, { views: 0 });
+  a.views = (a.views || 0) + 1;
+  BlogStore.set("analytics:" + postId, a);
+  API.trackView(postId);
+}
+
 function getPostAnalytics(postId) { return BlogStore.get("analytics:" + postId, { views: 0 }); }
 
 function getAuthorAnalytics(email) {
@@ -502,7 +565,6 @@ function initNav() {
     });
   }
 
-  // Close nav on link click
   nav.addEventListener("click", e => {
     if (e.target.closest(".nav-link")) nav.classList.remove("open");
   });
@@ -534,7 +596,6 @@ function initTheme() {
 function initHeroTyping() {
   const target = document.getElementById("typingText");
   if (!target) return;
-  // Keep it calm: no looping typing animation.
   target.textContent = "placement prep.";
 }
 
@@ -557,7 +618,7 @@ function initHomeLatest() {
     : `<p class="lead">No student submissions yet. Sign up, publish a campus guide, and it will appear here instantly.</p>`;
 }
 
-/* ===== Blog Listing (Replaces AngularJS) ===== */
+/* ===== Blog Listing ===== */
 function initBlogListing() {
   const container = document.getElementById("blogListing");
   const searchInput = document.getElementById("blogSearch");
@@ -574,7 +635,6 @@ function initBlogListing() {
   let currentPage = 1;
   const perPage = 6;
 
-  // Deep links: blog.html?cat=DSA%20%26%20Coding&q=arrays&sort=likes
   const params = new URLSearchParams(window.location.search);
   const initialCat = params.get("cat");
   const initialQ = params.get("q");
@@ -591,7 +651,6 @@ function initBlogListing() {
       _readTime: calculateReadTime(p.content),
       _createdAt: typeof p.createdAt === "number" ? p.createdAt : 0
     }));
-
     if (selectedCategory !== "All") posts = posts.filter(p => p.category === selectedCategory);
     if (searchText.trim()) {
       const q = searchText.trim().toLowerCase();
@@ -603,12 +662,10 @@ function initBlogListing() {
         p.content.toLowerCase().includes(q)
       );
     }
-
     if (sortMode === "likes") posts.sort((a, b) => b._likes - a._likes);
     else if (sortMode === "shortest") posts.sort((a, b) => a._readTime - b._readTime);
     else if (sortMode === "longest") posts.sort((a, b) => b._readTime - a._readTime);
     else posts.sort((a, b) => b._createdAt - a._createdAt);
-
     return posts;
   }
 
@@ -636,7 +693,6 @@ function initBlogListing() {
 
   window._blogPage = function(page) { currentPage = page; render(); };
 
-  // Category tabs
   if (categoryContainer) {
     categoryContainer.innerHTML = placementCategories.map(cat =>
       `<button class="tab ${cat === selectedCategory ? "active" : ""}" data-category="${cat}">${cat}</button>`
@@ -682,12 +738,9 @@ function initSinglePost() {
     return;
   }
 
-  // Set dynamic page title
   document.title = `${post.title} | PlacementPrep Hub`;
-
   trackPostView(post.id);
 
-  const commentsKey = `comments:${post.id}`;
   const liked = isLikedByCurrentUser(String(post.id));
   const authorPosts = getAllPosts().filter(item => item.authorEmail === post.authorEmail).length;
   const authorBio = post.authorBio || (getUserRecord(post.authorEmail) && getUserRecord(post.authorEmail).bio) || "Campus contributor";
@@ -749,7 +802,6 @@ function initSinglePost() {
     </div>
   `;
 
-  // Media attachments
   const mediaAttachments = document.getElementById("mediaAttachments");
   if (mediaAttachments) {
     const blocks = [];
@@ -759,7 +811,6 @@ function initSinglePost() {
     if (!blocks.length) mediaAttachments.style.display = "none";
   }
 
-  // Related posts
   const related = document.getElementById("relatedPosts");
   if (related) {
     const sameCat = getAllPosts().filter(item => item.id !== post.id && item.category === post.category);
@@ -767,7 +818,6 @@ function initSinglePost() {
     related.innerHTML = sameCat.concat(fallback).slice(0, 3).map(renderPostCard).join("");
   }
 
-  // Comments
   initComments(post.id);
 }
 
@@ -807,9 +857,12 @@ function initComments(postId) {
       const email = user ? user.email : "";
       const comment = document.getElementById("commentText").value.trim();
       if (!comment) { commentError.textContent = "Write a comment first."; return; }
+      const commentObj = { id: Date.now().toString(), name, email, comment, date: formatDate(new Date()), replies: [] };
       const comments = BlogStore.get(commentsKey, []);
-      comments.push({ id: Date.now().toString(), name, email, comment, date: formatDate(new Date()), replies: [] });
+      comments.push(commentObj);
       BlogStore.set(commentsKey, comments);
+      // Sync to server (fire-and-forget)
+      API.addComment(postId, { id: commentObj.id, name: commentObj.name, email: commentObj.email, comment: commentObj.comment, date: commentObj.date });
       commentError.textContent = "";
       commentForm.reset();
       renderComments();
@@ -827,12 +880,14 @@ function initComments(postId) {
       const text = input.value.trim();
       if (!text) { error.textContent = "Reply cannot be empty."; return; }
       const user = getLoggedInUser();
+      const reply = { id: Date.now().toString(), name: user ? user.fullName : "Guest reader", text, date: formatDate(new Date()) };
       const comments = BlogStore.get(commentsKey, []);
       const target = comments.find(c => String(c.id) === String(commentId));
       if (target) {
         target.replies = target.replies || [];
-        target.replies.push({ id: Date.now().toString(), name: user ? user.fullName : "Guest reader", text, date: formatDate(new Date()) });
+        target.replies.push(reply);
         BlogStore.set(commentsKey, comments);
+        API.addReply(commentId, { id: reply.id, name: reply.name, text: reply.text, date: reply.date });
         renderComments();
       }
     });
@@ -997,26 +1052,31 @@ function initCreatePost() {
     if (content) content.value = draft.content || "";
   }
 
+  let draftSaveTimer;
   function updatePreview() {
     const text = (content ? content.value : "").trim();
     const words = text.split(/\s+/).filter(Boolean).length;
     if (metrics) metrics.textContent = `${words} words • ${Math.max(1, Math.ceil(words / 200))} min read`;
     const hasDraft = Boolean(text || (title && title.value.trim()) || (category && category.value) || (coverImage && coverImage.value.trim()));
+    const draftObj = {
+      title: title ? title.value.trim() : "",
+      category: category ? category.value : "",
+      coverImage: coverImage ? coverImage.value.trim() : "",
+      videoUrl: videoUrl ? videoUrl.value.trim() : "",
+      youtubeUrl: youtubeUrl ? youtubeUrl.value.trim() : "",
+      content: text,
+      status: "draft",
+      lastUpdated: formatDate(new Date())
+    };
     if (hasDraft) {
-      BlogStore.set(draftKey, {
-        title: title ? title.value.trim() : "",
-        category: category ? category.value : "",
-        coverImage: coverImage ? coverImage.value.trim() : "",
-        videoUrl: videoUrl ? videoUrl.value.trim() : "",
-        youtubeUrl: youtubeUrl ? youtubeUrl.value.trim() : "",
-        content: text,
-        status: "draft",
-        lastUpdated: formatDate(new Date())
-      });
+      BlogStore.set(draftKey, draftObj);
+      // Debounced server save
+      clearTimeout(draftSaveTimer);
+      draftSaveTimer = setTimeout(() => { API.saveDraft(user.email, draftObj); }, 1500);
     } else {
       BlogStore.remove(draftKey);
     }
-    if (draftStatus) draftStatus.textContent = hasDraft ? "Draft saved in this browser" : "Draft is empty";
+    if (draftStatus) draftStatus.textContent = hasDraft ? "Draft saved" : "Draft is empty";
   }
 
   [title, category, coverImage, videoUrl, youtubeUrl, content].filter(Boolean).forEach(el => el.addEventListener("input", updatePreview));
@@ -1031,7 +1091,6 @@ function initCreatePost() {
     if (t.length < 8) { error.textContent = "Use a more specific title, at least 8 characters."; return; }
     if (ct.split(/\s+/).filter(Boolean).length < 25) { error.textContent = "Write at least 25 words."; return; }
 
-    const posts = getStoredPosts();
     const post = {
       id: Date.now().toString(),
       createdAt: Date.now(),
@@ -1051,14 +1110,20 @@ function initCreatePost() {
       status: "published",
       likes: 0
     };
+
+    // Save to localStorage
+    const posts = getStoredPosts();
     posts.push(post);
     BlogStore.set("posts", posts);
     BlogStore.remove(draftKey);
+
+    // Sync to MySQL (fire-and-forget)
+    API.createPost(post);
+
     error.textContent = "";
     form.reset();
     updatePreview();
 
-    // Show toast
     const toast = document.getElementById("createToast");
     if (toast) {
       toast.style.display = "block";
@@ -1120,7 +1185,7 @@ function ensureDefaultAdminAccount() {
 function initSignup() {
   const form = document.getElementById("signupForm");
   if (!form) return;
-  form.addEventListener("submit", e => {
+  form.addEventListener("submit", async e => {
     e.preventDefault();
     const fullName = document.getElementById("fullName").value.trim();
     const email = document.getElementById("email").value.trim().toLowerCase();
@@ -1137,10 +1202,18 @@ function initSignup() {
 
     const users = BlogStore.get("users", []);
     if (users.some(u => u.email.toLowerCase() === email)) { error.textContent = "An account with this email already exists."; return; }
-    users.push({ fullName, email, password, bio, expertise, role: "user" });
-    BlogStore.set("users", users);
-    error.textContent = "";
 
+    const newUser = { fullName, email, password, bio, expertise, role: "user" };
+    users.push(newUser);
+    BlogStore.set("users", users);
+
+    // Sync to MySQL
+    const result = await API.register(newUser);
+    if (result && result.ok === false && result.error && result.error.includes("already")) {
+      // Already exists in DB — non-fatal for the user flow since local check passed
+    }
+
+    error.textContent = "";
     const success = document.getElementById("signupSuccess");
     if (success) success.textContent = "Account created. Redirecting to login...";
     setTimeout(() => { window.location.href = "login.html"; }, 900);
@@ -1150,7 +1223,7 @@ function initSignup() {
 function initLogin() {
   const form = document.getElementById("loginForm");
   if (!form) return;
-  form.addEventListener("submit", e => {
+  form.addEventListener("submit", async e => {
     e.preventDefault();
     const email = document.getElementById("email").value.trim().toLowerCase();
     const password = document.getElementById("password").value;
@@ -1160,12 +1233,28 @@ function initLogin() {
     if (!email || !password) { error.textContent = "Email and password are required."; return; }
     if (!isValidEmail(email) || password.length < 6) { error.textContent = "Use a valid email and a 6 character password."; return; }
 
-    const user = BlogStore.get("users", []).find(u => u.email.toLowerCase() === email && u.password === password);
+    // Try server first
+    const result = await API.login(email, password);
+    let user = null;
+    if (result && result.ok && result.user) {
+      user = result.user;
+      // Update local users list
+      const localUsers = BlogStore.get("users", []);
+      const idx = localUsers.findIndex(u => u.email.toLowerCase() === email);
+      if (idx === -1) localUsers.push(user);
+      else localUsers[idx] = { ...localUsers[idx], ...user };
+      BlogStore.set("users", localUsers);
+    } else {
+      // Fallback to localStorage
+      user = BlogStore.get("users", []).find(u => u.email.toLowerCase() === email && u.password === password);
+    }
+
     if (!user) {
       error.textContent = "Invalid login credentials.";
       if (formCard) { formCard.classList.add("shake"); setTimeout(() => formCard.classList.remove("shake"), 600); }
       return;
     }
+
     BlogStore.set("loggedInUser", {
       fullName: user.fullName,
       email: user.email,
@@ -1195,9 +1284,12 @@ function initContact() {
     const error = document.getElementById("contactError");
     if (!name || !email || !text) { error.textContent = "All fields are required."; return; }
     if (!isValidEmail(email)) { error.textContent = "Enter a valid email address."; return; }
+    const msg = { id: Date.now().toString(), name, email, message: text, date: formatDate(new Date()) };
     const messages = BlogStore.get("contactMessages", []);
-    messages.push({ id: Date.now().toString(), name, email, message: text, date: formatDate(new Date()) });
+    messages.push(msg);
     BlogStore.set("contactMessages", messages);
+    // Sync to MySQL
+    API.addContact(msg);
     error.textContent = "";
     form.reset();
     if (counter) counter.textContent = "0 characters";
@@ -1206,7 +1298,7 @@ function initContact() {
   });
 }
 
-/* ===== Event Delegation (jQuery replacement) ===== */
+/* ===== Event Delegation ===== */
 function initEventDelegation() {
   // Like button
   document.addEventListener("click", e => {
@@ -1222,12 +1314,14 @@ function initEventDelegation() {
       map[postId] = Array.from(new Set(nextList));
       setLikesByPost(map);
 
-      // Clear fallback count for this post since we now have a real list.
       const fallback = BlogStore.get("likeCountFallback", {});
       if (fallback && typeof fallback === "object" && typeof fallback[postId] === "number") {
         delete fallback[postId];
         BlogStore.set("likeCountFallback", fallback);
       }
+
+      // Sync to MySQL
+      API.toggleLike(postId, actor);
 
       const isNowLiked = !already;
       btn.setAttribute("data-liked", String(isNowLiked));
@@ -1248,10 +1342,13 @@ function initEventDelegation() {
     e.preventDefault();
     const id = String(btn.getAttribute("data-id"));
     const key = getSavedKey();
+    const apiKey = getApiSavedKey();
     const saved = BlogStore.get(key, []).map(String);
     const wasSaved = saved.includes(id);
     const next = wasSaved ? saved.filter(pid => pid !== id) : saved.concat(id);
     BlogStore.set(key, Array.from(new Set(next)));
+    // Sync to MySQL
+    API.toggleSaved(apiKey, id);
     document.querySelectorAll(`.save-post-btn[data-id="${CSS.escape(id)}"]`).forEach(b => {
       const icon = b.querySelector("i");
       const span = b.querySelector("span");
@@ -1274,19 +1371,15 @@ function initEventDelegation() {
     const shareUrl = new URL(`post.html?id=${encodeURIComponent(id)}`, window.location.href);
     const post = getAllPosts().find(p => String(p.id) === String(id));
     const title = post ? post.title : "PlacementPrep guide";
-
-    // Prefer native share if available.
     if (navigator.share) {
       navigator.share({ title, text: title, url: shareUrl.href }).catch(() => {});
       return;
     }
-
     if (!modal || !urlInput) { showToast("Share modal not available on this page.", "error"); return; }
     urlInput.value = shareUrl.href;
     modal.classList.add("open");
   });
 
-  // Close share modal
   document.addEventListener("click", e => {
     const modal = document.getElementById("shareModal");
     if (!modal) return;
@@ -1295,7 +1388,6 @@ function initEventDelegation() {
     }
   });
 
-  // Copy share link
   document.addEventListener("click", e => {
     const btn = e.target.closest("#copyShareLink");
     if (!btn) return;
@@ -1307,7 +1399,6 @@ function initEventDelegation() {
       .catch(() => { showToast("Copy failed. Select the link and copy manually.", "error"); });
   });
 
-  // Share to Twitter
   document.addEventListener("click", e => {
     const btn = e.target.closest("#shareTwitter");
     if (!btn) return;
@@ -1315,7 +1406,6 @@ function initEventDelegation() {
     if (url) window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url.value)}`, "_blank");
   });
 
-  // Reply toggle
   document.addEventListener("click", e => {
     const btn = e.target.closest(".reply-toggle");
     if (!btn) return;
@@ -1325,7 +1415,6 @@ function initEventDelegation() {
     }
   });
 
-  // Report button
   document.addEventListener("click", e => {
     const btn = e.target.closest("#reportButton");
     if (!btn) return;
@@ -1333,7 +1422,6 @@ function initEventDelegation() {
     if (panel) panel.style.display = panel.style.display === "block" ? "none" : "block";
   });
 
-  // Report form
   const reportForm = document.getElementById("reportForm");
   if (reportForm) {
     reportForm.addEventListener("submit", e => {
@@ -1344,9 +1432,12 @@ function initEventDelegation() {
       const params = new URLSearchParams(window.location.search);
       const postId = params.get("id");
       if (!reason) { error.textContent = "Choose a report reason."; return; }
+      const report = { id: Date.now().toString(), postId, reason, note, date: formatDate(new Date()) };
       const reports = BlogStore.get("reports", []);
-      reports.push({ id: Date.now().toString(), postId, reason, note, date: formatDate(new Date()) });
+      reports.push(report);
       BlogStore.set("reports", reports);
+      // Sync to MySQL
+      API.addReport(report);
       error.textContent = "";
       reportForm.reset();
       document.getElementById("reportPanel").style.display = "none";
@@ -1368,7 +1459,7 @@ function initEventDelegation() {
   });
 
   // Delete post
-  document.addEventListener("click", e => {
+  document.addEventListener("click", async e => {
     const btn = e.target.closest(".delete-post");
     if (!btn) return;
     const currentUser = getLoggedInUser();
@@ -1376,11 +1467,9 @@ function initEventDelegation() {
     const id = btn.getAttribute("data-id");
     const authorEmail = btn.getAttribute("data-author-email") || "";
     const canDelete = isAdminUser(currentUser) || authorEmail === currentUser.email;
-    if (!canDelete) {
-      showToast("You do not have permission to delete this post.", "error");
-      return;
-    }
+    if (!canDelete) { showToast("You do not have permission to delete this post.", "error"); return; }
     if (!confirm("Delete this post?")) return;
+
     const isSeedPost = seedPosts.some(p => String(p.id) === String(id));
     if (isSeedPost) {
       const deletedSeedPostIds = BlogStore.get("deletedSeedPostIds", []).map(String);
@@ -1391,46 +1480,39 @@ function initEventDelegation() {
     } else {
       const posts = BlogStore.get("posts", []).filter(p => String(p.id) !== String(id));
       BlogStore.set("posts", posts);
+      // Sync to MySQL
+      API.deletePost(id);
     }
+
     const likesByPost = BlogStore.get("likesByPost", {});
-    if (likesByPost && typeof likesByPost === "object") {
-      delete likesByPost[id];
-      BlogStore.set("likesByPost", likesByPost);
-    }
+    if (likesByPost && typeof likesByPost === "object") { delete likesByPost[id]; BlogStore.set("likesByPost", likesByPost); }
     const fallback = BlogStore.get("likeCountFallback", {});
-    if (fallback && typeof fallback === "object") {
-      delete fallback[id];
-      BlogStore.set("likeCountFallback", fallback);
-    }
+    if (fallback && typeof fallback === "object") { delete fallback[id]; BlogStore.set("likeCountFallback", fallback); }
     BlogStore.remove("comments:" + id);
     if (window.renderDashboard) window.renderDashboard();
   });
 
   // Admin: resolve report
-  document.addEventListener("click", e => {
+  document.addEventListener("click", async e => {
     const btn = e.target.closest(".resolve-report");
     if (!btn) return;
     const currentUser = getLoggedInUser();
-    if (!isAdminUser(currentUser)) {
-      showToast("Only admins can resolve reports.", "error");
-      return;
-    }
+    if (!isAdminUser(currentUser)) { showToast("Only admins can resolve reports.", "error"); return; }
     const reportId = btn.getAttribute("data-id");
     const reports = BlogStore.get("reports", []).filter(r => String(r.id) !== String(reportId));
     BlogStore.set("reports", reports);
+    // Sync to MySQL
+    API.deleteReport(reportId);
     showToast("Report resolved.");
     if (window.renderDashboard) window.renderDashboard();
   });
 
   // Admin: toggle user role
-  document.addEventListener("click", e => {
+  document.addEventListener("click", async e => {
     const btn = e.target.closest(".toggle-user-role");
     if (!btn) return;
     const currentUser = getLoggedInUser();
-    if (!isAdminUser(currentUser)) {
-      showToast("Only admins can change roles.", "error");
-      return;
-    }
+    if (!isAdminUser(currentUser)) { showToast("Only admins can change roles.", "error"); return; }
     const email = String(btn.getAttribute("data-email") || "").toLowerCase();
     if (!email) return;
     const users = BlogStore.get("users", []);
@@ -1443,6 +1525,9 @@ function initEventDelegation() {
     if (currentUser && String(currentUser.email).toLowerCase() === email) {
       BlogStore.set("loggedInUser", { ...currentUser, role: normalizeRole(currentUser.role) === "admin" ? "user" : "admin" });
     }
+    // Sync to MySQL
+    const targetUser = nextUsers.find(u => String(u.email).toLowerCase() === email);
+    if (targetUser) API.updateRole(email, targetUser.role);
     showToast("User role updated.");
     if (window.renderDashboard) window.renderDashboard();
   });
@@ -1495,13 +1580,19 @@ function initProfile() {
     </section>
   `;
 
-  // Follow button
   const followBtn = document.getElementById("followBtn");
   if (followBtn) {
     followBtn.addEventListener("click", () => {
-      const email = followBtn.getAttribute("data-email");
-      if (isFollowingAuthor(email)) { unfollowAuthor(email); followBtn.className = "btn btn-primary btn-sm"; followBtn.innerHTML = "<i class='fa-regular fa-user-plus'></i> Follow"; }
-      else { followAuthor(email); followBtn.className = "btn btn-secondary btn-sm"; followBtn.innerHTML = "<i class='fa-solid fa-user-check'></i> Following"; }
+      const btnEmail = followBtn.getAttribute("data-email");
+      if (isFollowingAuthor(btnEmail)) {
+        unfollowAuthor(btnEmail);
+        followBtn.className = "btn btn-primary btn-sm";
+        followBtn.innerHTML = "<i class='fa-regular fa-user-plus'></i> Follow";
+      } else {
+        followAuthor(btnEmail);
+        followBtn.className = "btn btn-secondary btn-sm";
+        followBtn.innerHTML = "<i class='fa-solid fa-user-check'></i> Following";
+      }
     });
   }
 }
@@ -1566,7 +1657,8 @@ function initSmoothExperience() {
 
 /* ===== Init ===== */
 document.addEventListener("DOMContentLoaded", async () => {
-  await SyncStoreAPI.hydrateLocalFromServer();
+  // Hydrate localStorage from MySQL — all existing rendering logic then works unchanged
+  await API.hydrateFromServer();
   ensureDefaultAdminAccount();
   guardAdminPage();
   initNav();
