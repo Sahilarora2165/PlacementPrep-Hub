@@ -23,7 +23,7 @@ const BlogStore = {
 
 /* ===== REST API client ===== */
 const API = {
-  _enabled: /^https?:/i.test(window.location.protocol),
+  _enabled: true, // Enable API for all protocols (http for dev, https for prod)
 
   async _req(method, path, body) {
     if (!this._enabled) return null;
@@ -34,8 +34,9 @@ const API = {
       };
       if (body !== undefined) opts.body = JSON.stringify(body);
       const res = await fetch(path, opts);
-      if (!res.ok) return null;
-      return await res.json();
+      const data = await res.json().catch(() => null);
+      if (!res.ok) return data || { ok: false, error: res.statusText || "Request failed" };
+      return data;
     } catch (e) {
       console.warn(`API ${method} ${path} failed:`, e);
       return null;
@@ -523,7 +524,11 @@ function renderPostCard(post) {
           </div>
           <h3>${escapeHTML(post.title)}</h3>
           <p class="excerpt">${escapeHTML(post.excerpt || makeExcerpt(post.content))}</p>
-          <div class="meta"><span>By <a href="profile.html?email=${encodeURIComponent(post.authorEmail)}" class="author-link" onclick="event.stopPropagation()">${escapeHTML(post.author)}</a></span><span>${getLikeCount(post)} likes</span><span>${getCommentCount(post.id)} comments</span></div>
+          <div class="meta">
+            <span>By <a href="profile.html?email=${encodeURIComponent(post.authorEmail)}" class="author-link" onclick="event.stopPropagation()">${escapeHTML(post.author)}</a></span>
+            <span><i class="fa-solid fa-heart" style="color:var(--accent);margin-right:4px;font-size:0.75rem"></i>${getLikeCount(post)}</span>
+            <span><i class="fa-solid fa-comment" style="color:var(--accent);margin-right:4px;font-size:0.75rem"></i>${getCommentCount(post.id)}</span>
+          </div>
         </div>
       </a>
       <div class="post-actions">
